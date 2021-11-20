@@ -2,6 +2,7 @@
 class Node:
     child_node_list = []
     optr = None
+    val = None
 
     def __init__(self,optr,sub_node_list: list):
         self.optr = optr

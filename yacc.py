@@ -1,9 +1,15 @@
 from ply import yacc
 from lex import tokens
 from utils import *
+from Program import *
 
 start = 'Program'
-
+precedence = (
+    ('left', 'PLUS', 'MINUS'),
+    ('left', 'TIMES', 'DIVIDE'),
+    ('right', 'UMINUS'),  # Unary minus operator
+)
+program_content = ProgramContext()
 
 def p_empty(p):
     '''EMPTY : '''
