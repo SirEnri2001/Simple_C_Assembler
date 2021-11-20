@@ -1,0 +1,115 @@
+<node optr='ExtDefList'>
+    <node optr='ext_dec'>
+        <leaf val='int' type='type_specifier'/>
+        <leaf val='a' type='ID'/>
+        <node optr='func_dec'>
+            <leaf val='b' type='ID'/>
+            <node optr='param_dec'>
+                <leaf val='int' type='type_specifier'/>
+                <leaf val='a' type='ID'/>
+            </node>
+            <node optr='param_dec'>
+                <leaf val='int' type='type_specifier'/>
+                <leaf val='b' type='ID'/>
+            </node>
+        </node>
+        <leaf val='c' type='ID'/>
+    </node>
+    <node optr='ext_func_def'>
+        <node optr='funhead_def'>
+            <leaf val='int' type='type_specifier'/>
+            <node optr='func_dec'>
+                <leaf val='func1' type='ID'/>
+            </node>
+        </node>
+        <node optr='compst'>
+            <node optr='def'>
+                <leaf val='int' type='type_specifier'/>
+                <node optr='init_assign'>
+                    <leaf val='a' type='ID'/>
+                    <leaf val='10' type='SINGLE'/>
+                </node>
+                <node optr='init_assign'>
+                    <leaf val='b' type='ID'/>
+                    <leaf val='20' type='SINGLE'/>
+                </node>
+            </node>
+            <node optr='call'>
+                <leaf val='puts' type='ID'/>
+                <leaf val='"123123"' type='SINGLE'/>
+            </node>
+            <node optr='call'>
+                <leaf val='puts' type='ID'/>
+                <leaf val='"321321"' type='SINGLE'/>
+            </node>
+            <node optr='call'>
+                <leaf val='printf' type='ID'/>
+                <node optr=''>
+                    <leaf val='"%d %d"' type='SINGLE'/>
+                    <node optr=''>
+                        <leaf val='a' type='SINGLE'/>
+                        <leaf val='b' type='SINGLE'/>
+                    </node>
+                </node>
+            </node>
+            <node optr='return'>
+                <leaf val='1' type='SINGLE'/>
+            </node>
+        </node>
+    </node>
+    <node optr='ext_func_def'>
+        <node optr='funhead_def'>
+            <leaf val='int' type='type_specifier'/>
+            <node optr='func_dec'>
+                <leaf val='func2' type='ID'/>
+                <node optr='param_dec'>
+                    <leaf val='int' type='type_specifier'/>
+                    <leaf val='a' type='ID'/>
+                </node>
+                <node optr='param_dec'>
+                    <leaf val='int' type='type_specifier'/>
+                    <leaf val='b' type='ID'/>
+                </node>
+                <node optr='param_dec'>
+                    <leaf val='int' type='type_specifier'/>
+                    <leaf val='c' type='ID'/>
+                </node>
+            </node>
+        </node>
+        <node optr='compst'>
+            <node optr='return'>
+                <leaf val='3' type='SINGLE'/>
+            </node>
+        </node>
+    </node>
+    <node optr='ext_func_def'>
+        <node optr='funhead_def'>
+            <leaf val='int' type='type_specifier'/>
+            <node optr='func_dec'>
+                <leaf val='main' type='ID'/>
+            </node>
+        </node>
+        <node optr='compst'>
+            <node optr='call'>
+                <leaf val='func1' type='ID'/>
+            </node>
+            <node optr='call'>
+                <leaf val='func2' type='ID'/>
+                <node optr=''>
+                    <leaf val='1' type='SINGLE'/>
+                    <node optr=''>
+                        <leaf val='2' type='SINGLE'/>
+                        <leaf val='3' type='SINGLE'/>
+                    </node>
+                </node>
+            </node>
+            <node optr='call'>
+                <leaf val='puts' type='ID'/>
+                <leaf val='"hello world"' type='SINGLE'/>
+            </node>
+            <node optr='return'>
+                <leaf val='0' type='SINGLE'/>
+            </node>
+        </node>
+    </node>
+</node>
