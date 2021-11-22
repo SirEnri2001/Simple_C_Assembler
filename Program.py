@@ -4,18 +4,30 @@ base_addr = 0
 
 class Field:
     id: str
-    def __init__(self, id):
+    size: int
+    type: str
+    def __init__(self, id,type,size):
         self.id = id
+        self.size = size
+        self.type = type
 
-    def __str__(self):
-        return "FieldId:"+id
+    def __repr__(self):
+        return "<field id='"+self.id+" type='"+self.type+"'/>"
 
 
-class ProgramContext:
+class StorageUnit:
     field_table = {}
-    def add_declared(self, id, type):
-        field = Field(id)
-        self.field_table[id] = field
+    static_list = []
+
+    def add_field(self,field: Field):
+        try:
+            self.field_table[field.id].append(field)
+        except KeyError:
+            self.field_table[field.id] = [field]
+
+    def add_declared(self, id, type,size):
+        field = Field(id,type,size)
+        self.add_field(field)
 
     def get(self, id) -> Optional[Field]:
         field = self.field_table.get(id)
@@ -23,3 +35,14 @@ class ProgramContext:
             print("Undefined ID "+id)
             return None
         return field
+
+    def add_constant(self, id: str, type: str, size: int):
+        field = Field(id, type, size)
+        self.static_list.append(field)
+        self.add_field(field)
+
+    def add_static(self, id: str, type: str,size:int):
+        field = Field(id,type,size)
+        self.static_list.append(field)
+        self.add_field(field)
+

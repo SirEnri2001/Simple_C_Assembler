@@ -1,15 +1,14 @@
 from ply import yacc
 from lex import tokens
 from utils import *
-from Program import *
 
 start = 'Program'
 precedence = (
-    ('left', 'PLUS', 'MINUS'),
-    ('left', 'TIMES', 'DIVIDE'),
-    ('right', 'UMINUS'),  # Unary minus operator
+    #('left', 'PLUS', 'MINUS'),
+    #('left', 'TIMES', 'DIVIDE')
+    # ('right', 'UMINUS'),  # Unary minus operator
 )
-program_content = ProgramContext()
+program_context = ProgramContext()
 
 def p_empty(p):
     '''EMPTY : '''
@@ -84,7 +83,7 @@ def p_not(p):
 def p_type(p):
     '''TYPE : INT
 	| FLOAT '''
-    p[0] = Leaf("type_specifier",p[1])
+    p[0] = TypeLeaf(p[1],4)
 
 
 def p_lp(p):
@@ -133,11 +132,34 @@ def p_ExtDefList(p):
 
 def p_FunHead(p):
     '''FunHead : Specifier FunDec'''
-    p[0] = Node('funhead_def',[p[1],p[2]])
+    p[0] = FunDefNode('funhead_def',[p[1],p[2]])
+
+
+def p_ExtDecHead(p):
+    '''ExtDecHead : Specifier VarDec'''
+    p[0] = ExtNode('extdec',[p[1],p[2]])
+
+def p_ExtDecHead_Fun(p):
+    '''ExtDecHead : Specifier FunDec'''
+    p[0] = ExtNode('extdec_fun',[p[1],p[2]])
+
+def p_ExtDecList(p):
+    '''ExtDecList : ExtDecList COMMA VarDec
+        | ExtDecHead'''
+    if len(p) == 4:
+        p[0] = ExtNode('extdec', [p[1].child_node_list[0], p[1], p[3]])
+    else:
+        p[0] = p[1]
+
+
+def p_ExtDecList_Fun(p):
+    '''ExtDecList : ExtDecList COMMA FunDec'''
+    p[0] = ExtNode('extdec_fun', [p[1].child_node_list[0], p[1], p[3]])
+
 
 def p_ExtDef_ExtDecList(p):
-    '''ExtDef : Specifier ExtDecList SEMI'''
-    p[0] = Node(optr="ext_dec",sub_node_list=[p[1],p[2]])
+    '''ExtDef : ExtDecList SEMI'''
+    p[0] = p[1]
 
 
 def p_ExtDef_Specifier(p):
@@ -146,18 +168,7 @@ def p_ExtDef_Specifier(p):
 
 def p_ExtDef_FunDef(p):
     '''ExtDef : FunHead CompSt '''
-    p[0] = Node(optr="ext_func_def", sub_node_list=[p[1], p[2]])
-
-def p_ExtDecList(p):
-    '''ExtDecList : VarDec
-	| VarDec COMMA ExtDecList
-	| FunDec
-	| FunDec COMMA ExtDecList'''
-    if len(p)==4:
-        p[0] = Node(optr="append",sub_node_list=[p[1],p[3]])
-    elif len(p)==2:
-        p[0] = p[1]
-
+    p[0] = Node(optr="extdef_func", sub_node_list=[p[1], p[2]])
 
 def p_Specifier(p):
     '''Specifier : TYPE
@@ -219,7 +230,7 @@ def p_ParamDec(p):
 
 def p_CompSt(p):
     '''CompSt : LC DefList StmtList RC '''
-    p[0] = Node('compst',[p[2],p[3]])
+    p[0] = CompStmtNode('compst',[p[2],p[3]])
 
 
 def p_StmtList(p):
@@ -254,26 +265,30 @@ def p_Stmt(p):
     p[0] = p[1]
 
 def p_DefList(p):
-    '''DefList : Def DefList
+    '''DefList : Def SEMI DefList
 	| EMPTY'''
-    if len(p) == 3:
-        p[0] = Node('append',[p[1],p[2]])
+    if len(p) == 4:
+        p[0] = Node('append',[p[1],p[3]])
     elif len(p) == 2:
         p[0] = p[1]
 
 
 def p_Def(p):
-    '''Def : Specifier DecList SEMI '''
-    p[0] = Node('def',[p[1],p[2]])
+    '''Def : DecList'''
+    p[0] = p[1]
+
+def p_DecHead(p):
+    '''DecHead : Specifier Dec'''
+    p[0] = LocalDecNode('dec', [p[1],p[2]])
 
 
 def p_DecList(p):
-    '''DecList : Dec
-	| Dec COMMA DecList '''
+    '''DecList : DecHead
+     | DecList COMMA Dec'''
     if len(p)==2:
         p[0] = p[1]
-    else:
-        p[0] = Node('append',[p[1],p[3]])
+    elif len(p)==4:
+        p[0] = LocalDecNode('dec',[p[1].child_node_list[0],p[1],p[3]])
 
 
 def p_Dec(p):
@@ -304,10 +319,14 @@ def p_Exp_par(p):
 
 def p_Exp_Single(p):
     '''Exp : ID
-	| NUMBER
-	| DECIMAL
-	| STRINGLITERAL'''
+	| NUMBER'''
     p[0] = Leaf('SINGLE', p[1])
+
+def p_Exp_Single_Constant(p):
+    '''Exp : DECIMAL
+	| STRINGLITERAL'''
+    node = Leaf('SINGLE', p[1])
+    p[0] = node
 
 def p_Exp(p):
     '''Exp : Exp ASSIGNOP Exp
@@ -360,27 +379,20 @@ s = '''
  *
  */
 int a, b(int a,int b),c;
-int func1(){
-    int a = 10, b = 20;
-    puts("123123");
-    puts("321321");
-    printf("%d %d",a,b);
-    return 1;
-}
 
-int func2(int a,int b,int c){
-    return 3;
-}
-
-int main(){
-    func1();
-    func2(1,2,3);
-    puts("hello world");
-    return 0;
+int main(int argc,int argv, int argb){
+    int c,d,e,f;
+    puts("tyt");
+    return a+c;
 }
 '''
 node = parser.parse(s)
 optimizer = TreeOptimizer()
 optimizer.DeleteNone(node)
 optimizer.PromotionNodes(node)
+optimizer.PromotionNodesSpecified(node,["extdec","extdec_fun"])
+optimizer.PromotionNodesSpecified(node,["dec"])
 print(node)
+
+node.start_program(program_context)
+print(program_context.field_table)

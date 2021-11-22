@@ -1,115 +1,72 @@
-<node optr='ExtDefList'>
-    <node optr='ext_dec'>
-        <leaf val='int' type='type_specifier'/>
-        <leaf val='a' type='ID'/>
-        <node optr='func_dec'>
-            <leaf val='b' type='ID'/>
-            <node optr='param_dec'>
-                <leaf val='int' type='type_specifier'/>
-                <leaf val='a' type='ID'/>
-            </node>
-            <node optr='param_dec'>
-                <leaf val='int' type='type_specifier'/>
-                <leaf val='b' type='ID'/>
-            </node>
-        </node>
-        <leaf val='c' type='ID'/>
-    </node>
-    <node optr='ext_func_def'>
-        <node optr='funhead_def'>
-            <leaf val='int' type='type_specifier'/>
-            <node optr='func_dec'>
-                <leaf val='func1' type='ID'/>
-            </node>
-        </node>
-        <node optr='compst'>
-            <node optr='def'>
-                <leaf val='int' type='type_specifier'/>
-                <node optr='init_assign'>
-                    <leaf val='a' type='ID'/>
-                    <leaf val='10' type='SINGLE'/>
-                </node>
-                <node optr='init_assign'>
-                    <leaf val='b' type='ID'/>
-                    <leaf val='20' type='SINGLE'/>
-                </node>
-            </node>
-            <node optr='call'>
-                <leaf val='puts' type='ID'/>
-                <leaf val='"123123"' type='SINGLE'/>
-            </node>
-            <node optr='call'>
-                <leaf val='puts' type='ID'/>
-                <leaf val='"321321"' type='SINGLE'/>
-            </node>
-            <node optr='call'>
-                <leaf val='printf' type='ID'/>
-                <node optr=''>
-                    <leaf val='"%d %d"' type='SINGLE'/>
-                    <node optr=''>
-                        <leaf val='a' type='SINGLE'/>
-                        <leaf val='b' type='SINGLE'/>
-                    </node>
-                </node>
-            </node>
-            <node optr='return'>
-                <leaf val='1' type='SINGLE'/>
-            </node>
-        </node>
-    </node>
-    <node optr='ext_func_def'>
-        <node optr='funhead_def'>
-            <leaf val='int' type='type_specifier'/>
-            <node optr='func_dec'>
-                <leaf val='func2' type='ID'/>
-                <node optr='param_dec'>
-                    <leaf val='int' type='type_specifier'/>
-                    <leaf val='a' type='ID'/>
-                </node>
-                <node optr='param_dec'>
-                    <leaf val='int' type='type_specifier'/>
-                    <leaf val='b' type='ID'/>
-                </node>
-                <node optr='param_dec'>
-                    <leaf val='int' type='type_specifier'/>
-                    <leaf val='c' type='ID'/>
-                </node>
-            </node>
-        </node>
-        <node optr='compst'>
-            <node optr='return'>
-                <leaf val='3' type='SINGLE'/>
-            </node>
-        </node>
-    </node>
-    <node optr='ext_func_def'>
-        <node optr='funhead_def'>
-            <leaf val='int' type='type_specifier'/>
-            <node optr='func_dec'>
-                <leaf val='main' type='ID'/>
-            </node>
-        </node>
-        <node optr='compst'>
-            <node optr='call'>
-                <leaf val='func1' type='ID'/>
-            </node>
-            <node optr='call'>
-                <leaf val='func2' type='ID'/>
-                <node optr=''>
-                    <leaf val='1' type='SINGLE'/>
-                    <node optr=''>
-                        <leaf val='2' type='SINGLE'/>
-                        <leaf val='3' type='SINGLE'/>
-                    </node>
-                </node>
-            </node>
-            <node optr='call'>
-                <leaf val='puts' type='ID'/>
-                <leaf val='"hello world"' type='SINGLE'/>
-            </node>
-            <node optr='return'>
-                <leaf val='0' type='SINGLE'/>
-            </node>
-        </node>
-    </node>
-</node>
+<Generic optr='ExtDefList'>
+    <Ext optr='extdec'>
+        <Type val='int'/>
+        <ID val='a'/>
+    </Ext>
+    <Ext optr='extdec_fun'>
+        <Type val='int'/>
+        <Generic optr='func_dec'>
+            <ID val='b'/>
+            <Generic optr='param_dec'>
+                <Type val='int'/>
+                <ID val='a'/>
+            </Generic>
+            <Generic optr='param_dec'>
+                <Type val='int'/>
+                <ID val='b'/>
+            </Generic>
+        </Generic>
+    </Ext>
+    <Ext optr='extdec'>
+        <Type val='int'/>
+        <ID val='c'/>
+    </Ext>
+    <Generic optr='extdef_func'>
+        <FunDef optr='funhead_def'>
+            <Type val='int'/>
+            <Generic optr='func_dec'>
+                <ID val='main'/>
+                <Generic optr='param_dec'>
+                    <Type val='int'/>
+                    <ID val='argc'/>
+                </Generic>
+                <Generic optr='param_dec'>
+                    <Type val='int'/>
+                    <ID val='argv'/>
+                </Generic>
+                <Generic optr='param_dec'>
+                    <Type val='int'/>
+                    <ID val='argb'/>
+                </Generic>
+            </Generic>
+        </FunDef>
+        <CompStmt optr='compst'>
+            <LocalDec optr='dec'>
+                <Type val='int'/>
+                <ID val='c'/>
+            </LocalDec>
+            <LocalDec optr='dec'>
+                <Type val='int'/>
+                <ID val='d'/>
+            </LocalDec>
+            <LocalDec optr='dec'>
+                <Type val='int'/>
+                <ID val='e'/>
+            </LocalDec>
+            <LocalDec optr='dec'>
+                <Type val='int'/>
+                <ID val='f'/>
+            </LocalDec>
+            <Generic optr='call'>
+                <ID val='puts'/>
+                <SINGLE val='"tyt"'/>
+            </Generic>
+            <Generic optr='return'>
+                <Generic optr='+'>
+                    <SINGLE val='a'/>
+                    <SINGLE val='c'/>
+                </Generic>
+            </Generic>
+        </CompStmt>
+    </Generic>
+</Generic>
