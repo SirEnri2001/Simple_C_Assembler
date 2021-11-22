@@ -31,6 +31,7 @@ class Node(BaseNode):
         super(Node, self).__init__(sub_node_list)
         self.optr = optr
         self.type = "Generic"
+        self.instruction = ''
 
     def __str__(self):
         msg: str = "<" + self.type + " optr='" + self.optr + "'>"
@@ -68,7 +69,6 @@ class CalcNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
         self.type = "Calc"
-        self._asm = ""
 
     def set_program(self):
         pass
