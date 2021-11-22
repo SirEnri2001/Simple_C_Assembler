@@ -22,6 +22,8 @@ class ProcessNode(BaseNode):
 class Node(BaseNode):
     optr = None
     type = ""
+    storage_unit: StorageUnit
+
     def __init__(self,optr,sub_node_list: list):
         super(Node, self).__init__(sub_node_list)
         self.optr = optr
@@ -34,13 +36,14 @@ class Node(BaseNode):
         msg = msg + "\n</"+self.type+">"
         return msg
 
-    def set_program(self, storage_unit: StorageUnit):
+    def set_program(self):
         pass
 
-    def start_program(self, storage_unit):
-        self.set_program(storage_unit)
+    def start_program(self, su: StorageUnit):
+        self.storage_unit = su
+        self.set_program()
         for node in self.child_node_list:
-            node.start_program(storage_unit)
+            node.start_program(self.storage_unit)
 
 
 class ExtNode(Node):
@@ -48,18 +51,23 @@ class ExtNode(Node):
         super().__init__(optr, sub_node_list)
         self.type = "Ext"
 
-    def set_program(self, storage_unit: StorageUnit):
+    def set_program(self):
         if self.optr == 'extdec':
             type_leaf = self.child_node_list[0]
             id_leaf = self.child_node_list[1]
-            storage_unit.add_static(id_leaf.val,type_leaf.val,type_leaf.size)
+            self.storage_unit.add_static(id_leaf.val,type_leaf.val,type_leaf.size)
+        if self.optr == 'extdef_func':
+            new_su = StorageUnit(self.storage_unit)
+            self.storage_unit = new_su
+            print(new_su)
+
 
 class FunDefNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
         self.type = "FunDef"
 
-    def set_program(self, storage_unit: StorageUnit):
+    def set_program(self):
         pass
 
 class LocalDecNode(Node):
@@ -67,17 +75,17 @@ class LocalDecNode(Node):
         super().__init__(optr, sub_node_list)
         self.type = "LocalDec"
 
-    def set_program(self, storage_unit: StorageUnit):
+    def set_program(self):
         type_leaf = self.child_node_list[0]
         id_leaf = self.child_node_list[1]
-        storage_unit.add_declared(id=id_leaf.val,type=type_leaf.val,size=type_leaf.size)
+        self.storage_unit.add_declared(id=id_leaf.val,type=type_leaf.val,size=type_leaf.size)
 
 class CompStmtNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
         self.type = "CompStmt"
 
-    def set_program(self, storage_unit: StorageUnit):
+    def set_program(self):
         pass
 
 
@@ -94,7 +102,7 @@ class IdLeaf(Leaf):
     def __init__(self, val):
         super().__init__("Identifier", val)
 
-    def set_program(self, storage_unit: StorageUnit):
+    def set_program(self):
         pass
 
 class TypeLeaf(Leaf):
@@ -104,7 +112,7 @@ class TypeLeaf(Leaf):
         super().__init__("Type", val)
         self.size = size
 
-    def set_program(self, storage_unit: StorageUnit):
+    def set_program(self):
         pass
 
 class TreeOptimizer:

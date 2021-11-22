@@ -21,7 +21,7 @@
         <Type val='int'/>
         <ID val='c'/>
     </Ext>
-    <Generic optr='extdef_func'>
+    <Ext optr='extdef_func'>
         <FunDef optr='funhead_def'>
             <Type val='int'/>
             <Generic optr='func_dec'>
@@ -43,7 +43,7 @@
         <CompStmt optr='compst'>
             <LocalDec optr='dec'>
                 <Type val='int'/>
-                <ID val='c'/>
+                <ID val='a'/>
             </LocalDec>
             <LocalDec optr='dec'>
                 <Type val='int'/>
@@ -68,5 +68,5 @@
                 </Generic>
             </Generic>
         </CompStmt>
-    </Generic>
+    </Ext>
 </Generic>

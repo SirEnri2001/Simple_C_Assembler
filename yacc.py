@@ -8,7 +8,6 @@ precedence = (
     #('left', 'TIMES', 'DIVIDE')
     # ('right', 'UMINUS'),  # Unary minus operator
 )
-program_context = ProgramContext()
 
 def p_empty(p):
     '''EMPTY : '''
@@ -168,7 +167,7 @@ def p_ExtDef_Specifier(p):
 
 def p_ExtDef_FunDef(p):
     '''ExtDef : FunHead CompSt '''
-    p[0] = Node(optr="extdef_func", sub_node_list=[p[1], p[2]])
+    p[0] = ExtNode(optr="extdef_func", sub_node_list=[p[1], p[2]])
 
 def p_Specifier(p):
     '''Specifier : TYPE
@@ -381,12 +380,13 @@ s = '''
 int a, b(int a,int b),c;
 
 int main(int argc,int argv, int argb){
-    int c,d,e,f;
+    int a,d,e,f;
     puts("tyt");
     return a+c;
 }
 '''
 node = parser.parse(s)
+storage_unit = StorageUnit(None)
 optimizer = TreeOptimizer()
 optimizer.DeleteNone(node)
 optimizer.PromotionNodes(node)
@@ -394,5 +394,5 @@ optimizer.PromotionNodesSpecified(node,["extdec","extdec_fun"])
 optimizer.PromotionNodesSpecified(node,["dec"])
 print(node)
 
-node.start_program(program_context)
-print(program_context.field_table)
+node.start_program(storage_unit)
+print(storage_unit)
