@@ -7,7 +7,6 @@ l_seq = 1
 
 code_integrate = []
 
-
 class BaseNode:
     child_node_list = []
     val = None
@@ -38,6 +37,8 @@ class Node(BaseNode):
         self.nodeType = "Generic"
         self.fakeCode = []
         self.fakeCode_post = []
+        self.targetCode = []
+        self.targetCode_post = []
 
     def __repr__(self):
         return self.__str__()
@@ -76,6 +77,37 @@ class Node(BaseNode):
     def get_fakeCode_post(self) -> list:
         return self.fakeCode_post
 
+    def get_targetCode(self) -> list:
+        return self.targetCode
+
+    def generate_targetCode(self):
+        global code_integrate
+        targetCode = self.get_fakeCode()
+        if targetCode is not None:
+            code_integrate.extend(targetCode)
+        for node in self.child_node_list:
+            node.generate_fakeCode()
+        targetCode = self.get_fakeCode_post()
+        if targetCode is not None:
+            code_integrate.extend(targetCode)
+        return code_integrate
+
+    def get_targetCode_post(self) -> list:
+        return self.targetCode_post
+
+class ProgramNode(Node):
+    def __init__(self, optr, sub_node_list: list):
+        super().__init__(optr, sub_node_list)
+        self.nodeType = "Program"
+
+    def set_program(self):
+        pass
+
+    def get_fakeCode(self):
+        for node in self.child_node_list:
+            pass
+        return self.fakeCode
+
 
 class ExtNode(Node):
     def __init__(self, optr, sub_node_list: list):
@@ -94,9 +126,9 @@ class ExtNode(Node):
             self.storage_unit = new_su
             self.id_leaf = self.child_node_list[0].id
 
-    def get_fakeCode(self):
+    def get_fakeCode(self) -> list:
         if self.optr == 'extdec':
-            return []
+            self.fakeCode.append('.globl ' + self.child_node_list[0].id.val)
         if self.optr == 'extdef_func':
             self.fakeCode.append('.globl ' + self.child_node_list[0].id.val)
         return self.fakeCode

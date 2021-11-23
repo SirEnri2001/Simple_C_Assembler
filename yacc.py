@@ -121,7 +121,7 @@ def p_rc(p):
 def p_Program(p):
     '''Program : ExtDefList '''
     print("Compiler Start")
-    p[0] = Node('ExtDefList', [p[1]])
+    p[0] = ProgramNode('ExtDefList', [p[1]])
 
 
 def p_ExtDefList(p):
@@ -417,6 +417,10 @@ s = '''
  * Author : hanxinghua
  *
  */
+ int func1(int i,int j){
+    return 1;
+ }
+ 
 int main(){
     int a = 1, b = 2,c=3;
     while(a<b){
