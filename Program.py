@@ -26,7 +26,6 @@ class LocalField(Field):
     def __repr__(self):
         return "<LocalField id='" + self.id + "' type='" + self.type + "' address='"+str(self.offset)+"'/>"
 
-
 class StaticField(Field):
     def __init__(self, id, type, size):
         super().__init__(id, type, size)
@@ -37,12 +36,13 @@ class StorageUnit:
     static_list = []
     constant_list = []
     sub_storageUnit = []
+    func_calling_space = 0
 
     def __repr__(self):
         sub = ""
         for su in self.sub_storageUnit:
             sub+=str(su)
-        return "<Storage id=\""+str(self._su_id)+"\" fields=\""+str(self.field_table)+"\">"+sub+"</Storage>"
+        return "<Storage id=\""+str(self._su_id)+"\" size=\""+str(self.size)+"\">"+sub+"</Storage>"
 
     def __init__(self, caller: Optional):
         global su_id
@@ -50,6 +50,7 @@ class StorageUnit:
         self._su_id = su_id
         self.field_table = {}
         self.size = 0
+        self.func_calling_space = 0
         self.sub_storageUnit = []
         if caller is not None:
             self.static_list = caller.static_list
@@ -66,9 +67,14 @@ class StorageUnit:
         except KeyError:
             self.field_table[field.id] = field
 
+    def add_size(self, size: int):
+        self.size = self.size+size
+        if self.caller is not None:
+            self.caller.add_size(size)
+
     def add_local(self, id, type, size):
         field = LocalField(id, type, size, self.size)
-        self.size = self.size + size
+        self.add_size(size)
         self.add_field(field)
 
     def get(self, id: str) -> Optional[Field]:

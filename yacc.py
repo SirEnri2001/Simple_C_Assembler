@@ -304,9 +304,9 @@ def p_FuncCall(p):
     '''FuncCall : ID '(' Args ')'
 	| ID '(' ')' '''
     if len(p) == 5:
-        p[0] = Node('call', [Leaf('ID', p[1]), p[3]])
+        p[0] = FuncCallNode('call', [Leaf('ID', p[1]), p[3]])
     elif len(p) == 4:
-        p[0] = Node('call', [Leaf('ID', p[1])])
+        p[0] = FuncCallNode('call', [Leaf('ID', p[1])])
 
 
 def p_Args(p):
@@ -340,6 +340,7 @@ int main(){
     while(a<b){
         c = c + 3;
     }
+    func1(a,b);
     print(c);
     return 0;
 }
@@ -354,7 +355,8 @@ optimizer.PromotionNodesSpecified(node, ["dec"])
 print(node)
 
 node.start_program(storage_unit)
-for code in node.generate_fakeCode():
+print(node.storage_unit)
+for code in node.generate_targetCode():
     if re.match(".*[.:].*",code):
         print(code)
     else:
