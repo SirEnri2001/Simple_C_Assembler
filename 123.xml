@@ -4,18 +4,6 @@
             <Type val='int'/>
             <Generic optr='func_dec'>
                 <ID val='main'/>
-                <LocalDec optr='param_dec'>
-                    <Type val='int'/>
-                    <ID val='argc'/>
-                </LocalDec>
-                <LocalDec optr='param_dec'>
-                    <Type val='int'/>
-                    <ID val='argv'/>
-                </LocalDec>
-                <LocalDec optr='param_dec'>
-                    <Type val='int'/>
-                    <ID val='argb'/>
-                </LocalDec>
             </Generic>
         </FunDef>
         <CompStmt optr='compst'>
@@ -23,52 +11,41 @@
                 <Type val='int'/>
                 <Generic optr='init_assign'>
                     <ID val='a'/>
-                    <SINGLE val='0'/>
+                    <NUM val='1'/>
                 </Generic>
             </LocalDec>
             <LocalDec optr='dec'>
                 <Type val='int'/>
                 <Generic optr='init_assign'>
                     <ID val='b'/>
-                    <SINGLE val='1'/>
+                    <NUM val='2'/>
                 </Generic>
             </LocalDec>
             <LocalDec optr='dec'>
                 <Type val='int'/>
                 <Generic optr='init_assign'>
                     <ID val='c'/>
-                    <Calc optr='-'>
-                        <SINGLE val='a'/>
-                        <Calc optr='+'>
-                            <SINGLE val='b'/>
-                            <SINGLE val='3'/>
-                        </Calc>
-                    </Calc>
+                    <NUM val='3'/>
                 </Generic>
             </LocalDec>
-            <LocalDec optr='dec'>
-                <Type val='int'/>
-                <ID val='d'/>
-            </LocalDec>
-            <Calc optr='='>
-                <SINGLE val='a'/>
-                <Calc optr='*'>
-                    <SINGLE val='b'/>
-                    <SINGLE val='4'/>
+            <FlowCtrl optr='while'>
+                <Calc optr='<'>
+                    <Identifier val='a'/>
+                    <Identifier val='b'/>
                 </Calc>
-            </Calc>
-            <Generic optr='return'>
-                <Calc optr='+'>
-                    <SINGLE val='a'/>
-                    <Calc optr='*'>
-                        <SINGLE val='b'/>
-                        <Calc optr='-'>
-                            <SINGLE val='c'/>
-                            <SINGLE val='a'/>
+                <CompStmt optr='compst'>
+                    <Calc optr='='>
+                        <Identifier val='c'/>
+                        <Calc optr='+'>
+                            <Identifier val='c'/>
+                            <NUM val='3'/>
                         </Calc>
                     </Calc>
-                </Calc>
-            </Generic>
+                </CompStmt>
+            </FlowCtrl>
+            <Stmt optr='return'>
+                <NUM val='0'/>
+            </Stmt>
         </CompStmt>
     </Ext>
 </Generic>

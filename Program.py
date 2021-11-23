@@ -79,7 +79,9 @@ class StorageUnit:
             if self.caller is not None:
                 field = self.caller.get(id)
         if field is None:
-            print("Undefined Identifier of " + id)
+            print("Error: Undefined Identifier of " + id)
+            self.add_local(id,"int",8)
+            field = self.get(id)
         return field
 
     def add_constant(self, id: str, type: str, size: int):

@@ -1,3 +1,5 @@
+import re
+
 from ply import yacc
 from lex import tokens
 from utils import *
@@ -249,7 +251,7 @@ def p_StmtList(p):
 
 def p_Stmt_return(p):
     '''Stmt : RETURN Exp SEMI'''
-    p[0] = Node('return', [p[2]])
+    p[0] = StmtNode('return', [p[2]])
 
 
 def p_FlowCtrl(p):
@@ -258,11 +260,11 @@ def p_FlowCtrl(p):
 	| WHILE LP Exp RP Stmt'''
     if p[1] == "if":
         if len(p) == 6:
-            p[0] = Node('if', [p[3], p[5]])
+            p[0] = FlowCtrlNode('if', [p[3], p[5]])
         elif len(p) == 8:
-            p[0] = Node('if_else', [p[3], p[5], p[7]])
+            p[0] = FlowCtrlNode('if_else', [p[3], p[5], p[7]])
     elif p[1] == 'while':
-        p[0] = Node('while', [p[3], p[5]])
+        p[0] = FlowCtrlNode('while', [p[3], p[5]])
 
 
 def p_Stmt(p):
@@ -271,7 +273,6 @@ def p_Stmt(p):
 	| SEMI
 	| FlowCtrl'''
     p[0] = p[1]
-
 
 def p_DefList(p):
     '''DefList : Def SEMI DefList
@@ -333,24 +334,24 @@ def p_Exp_par(p):
     p[0] = p[2]
 
 
-def p_Exp_Single(p):
-    '''Exp : ID
-	| NUMBER'''
-    p[0] = Leaf('SINGLE', p[1])
+def p_Exp_Id(p):
+    '''Exp : ID'''
+    p[0] = IdLeaf(p[1])
+
+def p_Exp_Number(p):
+    '''Exp : NUMBER'''
+    p[0] = Leaf('NUM', p[1])
 
 
-def p_Exp_Single_Constant(p):
+def p_Exp_Constant(p):
     '''Exp : DECIMAL
 	| STRINGLITERAL'''
-    node = Leaf('SINGLE', p[1])
+    node = Leaf('CONST', p[1])
     p[0] = node
 
 
 def p_Exp(p):
     '''Exp : Exp ASSIGNOP Exp
-	| Exp AND Exp
-	| Exp OR Exp
-	| Exp RELOP Exp
 	| Exp PLUS Exp
 	| Exp MINUS Exp
 	| Exp STAR Exp
@@ -361,6 +362,19 @@ def p_Exp(p):
         p[0] = CalcNode(p[2], [p[1], p[3]])
     else:
         p[0] = p[1]
+
+def p_Exp_Logic(p):
+    '''Exp : Exp AND Exp
+    	| Exp OR Exp
+    	| '!' Exp'''
+    if len(p) == 4:
+        p[0] = LogicNode(p[2], [p[1], p[3]])
+    else:
+        p[0] = p[2]
+
+def p_Exp_Relop(p):
+    '''Exp : Exp RELOP Exp'''
+    p[0] = RelopCalcNode(p[2], [p[1], p[3]])
 
 
 def p_Exp_Mem(p):
@@ -404,6 +418,10 @@ s = '''
  *
  */
 int main(){
+    int a = 1, b = 2,c=3;
+    while(a<b){
+        c = c + 3;
+    }
     return 0;
 }
 '''
@@ -417,4 +435,8 @@ optimizer.PromotionNodesSpecified(node, ["dec"])
 print(node)
 
 node.start_program(storage_unit)
-node.generate_fakeCode()
+for code in node.generate_fakeCode():
+    if re.match(".*[.:].*",code):
+        print(code)
+    else:
+        print('\t'+code)

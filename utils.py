@@ -1,6 +1,11 @@
+import traceback
+
 from Program import *
 
 t_seq = 1
+l_seq = 1
+
+code_integrate = []
 
 
 class BaseNode:
@@ -26,15 +31,18 @@ class Node(BaseNode):
     optr = None
     type = ""
     storage_unit: StorageUnit
-    _fakeCode = []
 
     def __init__(self, optr, sub_node_list: list):
         super(Node, self).__init__(sub_node_list)
         self.optr = optr
         self.nodeType = "Generic"
-        self._fakeCode = []
+        self.fakeCode = []
+        self.fakeCode_post = []
 
     def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
         msg: str = "<" + self.nodeType + " optr='" + self.optr + "'>"
         for node in self.child_node_list:
             msg = msg + "\n" + str(node)
@@ -50,14 +58,23 @@ class Node(BaseNode):
         for node in self.child_node_list:
             node.start_program(self.storage_unit)
 
-    def set_fakeCode(self):
-        pass
+    def get_fakeCode(self) -> list:
+        return self.fakeCode
 
     def generate_fakeCode(self):
-        self.set_fakeCode()
-        print(self._fakeCode)
+        global code_integrate
+        fakeCode = self.get_fakeCode()
+        if fakeCode is not None:
+            code_integrate.extend(fakeCode)
         for node in self.child_node_list:
             node.generate_fakeCode()
+        fakeCode = self.get_fakeCode_post()
+        if fakeCode is not None:
+            code_integrate.extend(fakeCode)
+        return code_integrate
+
+    def get_fakeCode_post(self) -> list:
+        return self.fakeCode_post
 
 
 class ExtNode(Node):
@@ -76,31 +93,65 @@ class ExtNode(Node):
             new_su = StorageUnit(self.storage_unit)
             self.storage_unit = new_su
             self.id_leaf = self.child_node_list[0].id
-            print(self.child_node_list)
 
-    def set_fakeCode(self):
+    def get_fakeCode(self):
         if self.optr == 'extdec':
-            return
+            return []
         if self.optr == 'extdef_func':
-            self._fakeCode.append('_globl '+self.id_leaf.val)
+            self.fakeCode.append('.globl ' + self.child_node_list[0].id.val)
+        return self.fakeCode
 
 
 class CalcNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
         self.nodeType = "Calc"
-        self._asm = ""
 
     def set_program(self):
+        global t_seq
         self.val = 'T' + str(t_seq)
+        t_seq = t_seq+1
 
-    def set_fakeCode(self):
-        self.type = self.child_node_list[0].type # Simple implicit type convert
-        if self.optr=='=':
-            self._fakeCode.append("{}{} {},{}".format(
-                instruction_table[self.optr],instr_suffix[self.child_node_list[0].type],
-                self.child_node_list[0].val,self.child_node_list[1].val
+    def get_fakeCode_post(self) -> list:
+        post = []
+        self.type = self.child_node_list[0].type  # Simple implicit type convert
+        try:
+            post.append(
+                "{} = {} {} {}".format(self.val, self.child_node_list[0].val, self.optr, self.child_node_list[1].val))
+            '''if self.optr in ['+', '-', '*']:
+                self.fakeCode.append("{}{} {},{}".format(
+                    instruction_table[self.optr], instr_suffix[self.child_node_list[0].type],
+                    self.child_node_list[0].val, self.child_node_list[1].val
+                ))'''
+        except KeyError as e:
+            print("Compiler Error: Key Error in Calc\n\toptr: {}, type: {}".format(
+                self.optr, self.child_node_list[0].type
             ))
+        post.extend(self.fakeCode_post)
+        self.fakeCode_post = post
+        return self.fakeCode_post
+
+
+class RelopCalcNode(CalcNode):
+    pass
+
+
+class LogicNode(CalcNode):
+    pass
+
+
+prefix_instruction_table = {
+    '-': 'neg'
+}
+
+conditional_jmp_table = {
+    '==': 'je',
+    '!=': 'jne',
+    '>': 'jg',
+    '>=': 'jge',
+    '<': 'jl',
+    '<=': 'jle'
+}
 
 
 class PrefixCalcNode(CalcNode):
@@ -108,8 +159,14 @@ class PrefixCalcNode(CalcNode):
         super().__init__(optr, sub_node_list)
         self.nodeType = "PrefixCalc"
 
-    def set_program(self):
-        self.val = 'T'+str(t_seq)
+    def get_fakeCode(self):
+        self.type = self.child_node_list[0].type  # Simple implicit type convert
+        if self.optr == '=':
+            self.fakeCode.append("{}{} {}".format(
+                prefix_instruction_table[self.optr], instr_suffix[self.child_node_list[0].type],
+                self.child_node_list[0].val
+            ))
+        return self.fakeCode
 
 
 class MemNode(Node):
@@ -131,7 +188,10 @@ class FunDefNode(Node):
     def set_program(self):
         self.retType = self.child_node_list[0]
         self.id = self.child_node_list[1].child_node_list[0]
-        print(self.id)
+
+    def get_fakeCode(self):
+        self.fakeCode.append("{}:".format(self.child_node_list[1].child_node_list[0].val))
+        return self.fakeCode
 
 
 class LocalDecNode(Node):
@@ -148,7 +208,7 @@ class LocalDecNode(Node):
             id_leaf = id_leaf.child_node_list[0]
         self.storage_unit.add_local(id=id_leaf.val, type=type_leaf.val, size=type_leaf.size)
 
-    def get_fakecode(self):
+    def get_fakeCode(self):
         pass
 
 
@@ -156,7 +216,6 @@ class FunDecNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
         self.nodeType = "FunDec"
-
 
 
 class CompStmtNode(Node):
@@ -168,6 +227,61 @@ class CompStmtNode(Node):
         new_su = StorageUnit(self.storage_unit)
         self.storage_unit = new_su
 
+
+class StmtNode(Node):
+    def __init__(self, optr, sub_node_list: list):
+        super().__init__(optr, sub_node_list)
+        self.nodeType = "Stmt"
+
+    def set_program(self):
+        pass
+
+    def get_fakeCode_post(self):
+        post = []
+        if self.optr == 'return':
+            if self.child_node_list[0] is not None:
+                post.append('retVal = {}'.format(self.child_node_list[0].val))
+            post.append('ret')
+        post.extend(self.fakeCode_post)
+        self.fakeCode_post = post
+        return self.fakeCode_post
+
+
+class FlowCtrlNode(StmtNode):
+    def __init__(self, optr, sub_node_list: list):
+        super().__init__(optr, sub_node_list)
+        self.nodeType = "FlowCtrl"
+
+    def set_program(self):
+        pass
+
+    def get_fakeCode(self):
+        global l_seq
+        if self.optr=='if':
+            label = "L{}".format(l_seq)
+            l_seq = l_seq+1
+            self.child_node_list[1].fakeCode.append("cmp {},0".format(self.child_node_list[0].val))
+            self.child_node_list[1].fakeCode.append("je {}".format(label))
+            self.fakeCode_post.append("{}:".format(label))
+        if self.optr=='if_else':
+            label1 = "L{}".format(l_seq)
+            label2 = "L{}".format(l_seq+1)
+            l_seq = l_seq + 2
+            self.child_node_list[1].fakeCode.append("cmp {},0".format(self.child_node_list[0].val))
+            self.child_node_list[1].fakeCode.append("je {}".format(label1))
+            self.child_node_list[2].fakeCode.append("jmp {}".format(label2))
+            self.child_node_list[2].fakeCode.append("{}:".format(label1))
+            self.fakeCode_post.append("{}:".format(label2))
+        if self.optr=='while':
+            label1 = "L{}".format(l_seq)
+            label2 = "L{}".format(l_seq + 1)
+            l_seq = l_seq + 2
+            self.child_node_list[1].fakeCode.append("{}:".format(label1))
+            self.child_node_list[1].fakeCode.append("cmp {},0".format(self.child_node_list[0].val))
+            self.child_node_list[1].fakeCode.append("je {}".format(label2))
+            self.fakeCode_post.append("jmp {}".format(label1))
+            self.fakeCode_post.append("{}:".format(label2))
+        return self.fakeCode
 
 class Leaf(Node):
     def __init__(self, type, val):
@@ -182,30 +296,35 @@ class Leaf(Node):
 class IdLeaf(Leaf):
     def __init__(self, val):
         super().__init__("Identifier", val)
+        self.name = val
+        self.field = None
 
     def set_program(self):
-        pass
+        self.field = self.storage_unit.get(self.name)
+        self.type = self.field.type
+
 
 declared_type = {}
 
 size_table = {
     'int': 8,
-    'float' : 8,
-    'double' : 8,
-    'pointer' : 8
+    'float': 8,
+    'double': 8,
+    'pointer': 8
 }
 
 instr_suffix = {
-    'int':'l'
+    'int': 'l'
 }
 
 instruction_table = {
-    '=':'mov',
-    '+':'add',
-    '-':'sub',
-    '*':'imul',
-    '/':'idiv'
+    '=': 'mov',
+    '+': 'add',
+    '-': 'sub',
+    '*': 'imul',
+    '/': 'idiv'
 }
+
 
 class TypeLeaf(Leaf):
     size: int
@@ -220,7 +339,7 @@ class TypeLeaf(Leaf):
         pass
 
     @classmethod
-    def getType(cls,val):
+    def getType(cls, val):
         global declared_type
         try:
             typeObj = declared_type[val]
