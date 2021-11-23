@@ -1,72 +1,7 @@
-<Generic optr='ExtDefList'>
-    <Ext optr='extdec'>
-        <Type val='int'/>
-        <ID val='a'/>
-    </Ext>
-    <Ext optr='extdec_fun'>
-        <Type val='int'/>
-        <Generic optr='func_dec'>
-            <ID val='b'/>
-            <Generic optr='param_dec'>
-                <Type val='int'/>
-                <ID val='a'/>
-            </Generic>
-            <Generic optr='param_dec'>
-                <Type val='int'/>
-                <ID val='b'/>
-            </Generic>
-        </Generic>
-    </Ext>
-    <Ext optr='extdec'>
-        <Type val='int'/>
-        <ID val='c'/>
-    </Ext>
-    <Ext optr='extdef_func'>
-        <FunDef optr='funhead_def'>
-            <Type val='int'/>
-            <Generic optr='func_dec'>
-                <ID val='main'/>
-                <Generic optr='param_dec'>
-                    <Type val='int'/>
-                    <ID val='argc'/>
-                </Generic>
-                <Generic optr='param_dec'>
-                    <Type val='int'/>
-                    <ID val='argv'/>
-                </Generic>
-                <Generic optr='param_dec'>
-                    <Type val='int'/>
-                    <ID val='argb'/>
-                </Generic>
-            </Generic>
-        </FunDef>
-        <CompStmt optr='compst'>
-            <LocalDec optr='dec'>
-                <Type val='int'/>
-                <ID val='a'/>
-            </LocalDec>
-            <LocalDec optr='dec'>
-                <Type val='int'/>
-                <ID val='d'/>
-            </LocalDec>
-            <LocalDec optr='dec'>
-                <Type val='int'/>
-                <ID val='e'/>
-            </LocalDec>
-            <LocalDec optr='dec'>
-                <Type val='int'/>
-                <ID val='f'/>
-            </LocalDec>
-            <Generic optr='call'>
-                <ID val='puts'/>
-                <SINGLE val='"tyt"'/>
-            </Generic>
-            <Generic optr='return'>
-                <Generic optr='+'>
-                    <SINGLE val='a'/>
-                    <SINGLE val='c'/>
-                </Generic>
-            </Generic>
-        </CompStmt>
-    </Ext>
-</Generic>
+<Storage id="0" fields="{}">
+    <Storage id="1"
+             fields="{'argc': <LocalField id='argc' type='int' address='0'/>, 'argv': <LocalField id='argv' type='int' address='4'/>, 'argb': <LocalField id='argb' type='int' address='8'/>}">
+        <Storage id="2"
+                 fields="{'a': <LocalField id='a' type='int' address='0'/>, 'b': <LocalField id='b' type='int' address='4'/>, 'c': <LocalField id='c' type='int' address='8'/>, 'd': <LocalField id='d' type='int' address='12'/>}"></Storage>
+    </Storage>
+</Storage>

@@ -1,48 +1,74 @@
 from typing import Optional
 
-base_addr = 0
+addr_offset = 0
 su_id = 0
+
+
 class Field:
     id: str
     size: int
     type: str
 
-    def __init__(self, id,type,size):
+    def __init__(self, id, type, size):
         self.id = id
         self.size = size
         self.type = type
 
     def __repr__(self):
-        return "<field id='"+self.id+" type='"+self.type+"'/>"
+        return "<Field id='" + self.id + "' type='" + self.type + "'/>"
+
+
+class LocalField(Field):
+    def __init__(self, id, type, size, offset):
+        super().__init__(id, type, size)
+        self.offset = offset
+
+    def __repr__(self):
+        return "<LocalField id='" + self.id + "' type='" + self.type + "' address='"+str(self.offset)+"'/>"
+
+
+class StaticField(Field):
+    def __init__(self, id, type, size):
+        super().__init__(id, type, size)
 
 
 class StorageUnit:
     field_table = {}
     static_list = []
-    const_list = []
-    caller = None
+    constant_list = []
+    sub_storageUnit = []
 
-    def __str__(self):
-        return "<StorageUnit id="+str(self._su_id)+' field='+str(self.field_table)+'> called by '+str(self.caller)
+    def __repr__(self):
+        sub = ""
+        for su in self.sub_storageUnit:
+            sub+=str(su)
+        return "<Storage id=\""+str(self._su_id)+"\" fields=\""+str(self.field_table)+"\">"+sub+"</Storage>"
 
-    def __init__(self, caller:Optional):
+    def __init__(self, caller: Optional):
         global su_id
         self.caller = caller
         self._su_id = su_id
         self.field_table = {}
-        su_id = su_id+1
+        self.size = 0
+        self.sub_storageUnit = []
+        if caller is not None:
+            self.static_list = caller.static_list
+            self.constant_list = caller.constant_list
+            caller.sub_storageUnit.append(self)
+        su_id = su_id + 1
 
     def add_field(self, field: Field):
         try:
             if self.field_table[field.id] is not None:
-                print(self.field_table[field.id])
+                print(field.id + " already been declared")
             else:
                 self.field_table[field.id] = field
         except KeyError:
             self.field_table[field.id] = field
 
-    def add_declared(self, id, type, size):
-        field = Field(id,type,size)
+    def add_local(self, id, type, size):
+        field = LocalField(id, type, size, self.size)
+        self.size = self.size + size
         self.add_field(field)
 
     def get(self, id: str) -> Optional[Field]:
@@ -53,7 +79,7 @@ class StorageUnit:
             if self.caller is not None:
                 field = self.caller.get(id)
         if field is None:
-            print("Undefined Identifier of "+ id)
+            print("Undefined Identifier of " + id)
         return field
 
     def add_constant(self, id: str, type: str, size: int):
@@ -61,8 +87,7 @@ class StorageUnit:
         self.static_list.append(field)
         self.add_field(field)
 
-    def add_static(self, id: str, type: str,size:int):
-        field = Field(id,type,size)
+    def add_static(self, id: str, type: str, size: int):
+        field = Field(id, type, size)
         self.static_list.append(field)
         self.add_field(field)
-

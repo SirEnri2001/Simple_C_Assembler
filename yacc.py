@@ -4,14 +4,15 @@ from utils import *
 
 start = 'Program'
 precedence = (
-    #('left', 'PLUS', 'MINUS'),
-    #('left', 'TIMES', 'DIVIDE')
+    # ('left', 'PLUS', 'MINUS'),
+    # ('left', 'TIMES', 'DIVIDE')
     # ('right', 'UMINUS'),  # Unary minus operator
 )
 
+
 def p_empty(p):
     '''EMPTY : '''
-    p[0] = Leaf("none",'')
+    p[0] = Leaf("none", '')
 
 
 def p_semi(p):
@@ -82,7 +83,7 @@ def p_not(p):
 def p_type(p):
     '''TYPE : INT
 	| FLOAT '''
-    p[0] = TypeLeaf(p[1],4)
+    p[0] = TypeLeaf(p[1], 4)
 
 
 def p_lp(p):
@@ -118,29 +119,32 @@ def p_rc(p):
 def p_Program(p):
     '''Program : ExtDefList '''
     print("Compiler Start")
-    p[0] = Node('ExtDefList',[p[1]])
+    p[0] = Node('ExtDefList', [p[1]])
 
 
 def p_ExtDefList(p):
     '''ExtDefList : ExtDef ExtDefList
 	| EMPTY'''
-    if len(p)==2:
+    if len(p) == 2:
         p[0] = p[1]
-    if len(p)==3:
+    if len(p) == 3:
         p[0] = Node(optr="append", sub_node_list=[p[1], p[2]])
+
 
 def p_FunHead(p):
     '''FunHead : Specifier FunDec'''
-    p[0] = FunDefNode('funhead_def',[p[1],p[2]])
+    p[0] = FunDefNode('funhead_def', [p[1], p[2]])
 
 
 def p_ExtDecHead(p):
     '''ExtDecHead : Specifier VarDec'''
-    p[0] = ExtNode('extdec',[p[1],p[2]])
+    p[0] = ExtNode('extdec', [p[1], p[2]])
+
 
 def p_ExtDecHead_Fun(p):
     '''ExtDecHead : Specifier FunDec'''
-    p[0] = ExtNode('extdec_fun',[p[1],p[2]])
+    p[0] = ExtNode('extdec_fun', [p[1], p[2]])
+
 
 def p_ExtDecList(p):
     '''ExtDecList : ExtDecList COMMA VarDec
@@ -165,9 +169,11 @@ def p_ExtDef_Specifier(p):
     '''ExtDef : Specifier SEMI'''
     p[0] = Node(optr="specifier_dec", sub_node_list=[p[1]])
 
+
 def p_ExtDef_FunDef(p):
     '''ExtDef : FunHead CompSt '''
     p[0] = ExtNode(optr="extdef_func", sub_node_list=[p[1], p[2]])
+
 
 def p_Specifier(p):
     '''Specifier : TYPE
@@ -178,71 +184,73 @@ def p_Specifier(p):
 def p_StructSpecifier(p):
     '''StructSpecifier : STRUCT OptTag LC DefList RC
 	| STRUCT Tag '''
-    if len(p)==3:
-        p[0] = Node('struct',[p[2]])
-    elif len(p)==6:
-        p[0] = Node('struct',[p[2],p[4]])
+    if len(p) == 3:
+        p[0] = Node('struct', [p[2]])
+    elif len(p) == 6:
+        p[0] = Node('struct', [p[2], p[4]])
 
 
 def p_OptTag(p):
     '''OptTag : ID
 	| EMPTY'''
-    p[0] = Leaf('OptTag',p[1])
+    p[0] = Leaf('OptTag', p[1])
 
 
 def p_Tag(p):
     '''Tag : ID'''
-    p[0] = Leaf('Tag',p[1])
+    p[0] = Leaf('Tag', p[1])
 
 
 def p_VarDec(p):
     '''VarDec : ID
 	| VarDec LB NUMBER RB '''
-    if len(p)==2:
-        p[0]=Leaf("ID",p[1])
-    elif len(p)==5:
-        p[0] = Node('array_dec',[p[1], Leaf('NUMBER', p[3])])
+    if len(p) == 2:
+        p[0] = Leaf("ID", p[1])
+    elif len(p) == 5:
+        p[0] = Node('array_dec', [p[1], Leaf('NUMBER', p[3])])
 
 
 def p_FunDec(p):
     '''FunDec : ID LP VarList RP
 	| ID LP RP '''
     if len(p) == 5:
-        p[0] = Node('func_dec',[Leaf('ID',p[1]),p[3]])
-    elif len(p)==4:
-        p[0] = Node('func_dec',[Leaf('ID',p[1])])
+        p[0] = Node('func_dec', [Leaf('ID', p[1]), p[3]])
+    elif len(p) == 4:
+        p[0] = Node('func_dec', [Leaf('ID', p[1])])
 
 
 def p_VarList(p):
     '''VarList : ParamDec COMMA VarList
 	| ParamDec '''
-    if len(p)==2:
+    if len(p) == 2:
         p[0] = p[1]
-    elif len(p)==4:
-        p[0] = Node('append',[p[1],p[3]])
+    elif len(p) == 4:
+        p[0] = Node('append', [p[1], p[3]])
 
 
 def p_ParamDec(p):
     '''ParamDec : Specifier VarDec '''
-    p[0] = Node("param_dec",[p[1],p[2]])
+    p[0] = LocalDecNode("param_dec", [p[1], p[2]])
 
 
 def p_CompSt(p):
     '''CompSt : LC DefList StmtList RC '''
-    p[0] = CompStmtNode('compst',[p[2],p[3]])
+    p[0] = CompStmtNode('compst', [p[2], p[3]])
 
 
 def p_StmtList(p):
     '''StmtList : Stmt StmtList
 	| EMPTY'''
     if len(p) == 3:
-        p[0] = Node('append',[p[1],p[2]])
+        p[0] = Node('append', [p[1], p[2]])
     if len(p) == 2:
         p[0] = p[1]
 
+
 def p_Stmt_return(p):
     '''Stmt : RETURN Exp SEMI'''
-    p[0] = Node('return',[p[2]])
+    p[0] = Node('return', [p[2]])
+
 
 def p_FlowCtrl(p):
     '''FlowCtrl : IF LP Exp RP Stmt
@@ -250,11 +258,12 @@ def p_FlowCtrl(p):
 	| WHILE LP Exp RP Stmt'''
     if p[1] == "if":
         if len(p) == 6:
-            p[0] = Node('if',[p[3],p[5]])
-        elif len(p)==8:
+            p[0] = Node('if', [p[3], p[5]])
+        elif len(p) == 8:
             p[0] = Node('if_else', [p[3], p[5], p[7]])
-    elif p[1]=='while':
-        p[0] = Node('while',[p[3],p[5]])
+    elif p[1] == 'while':
+        p[0] = Node('while', [p[3], p[5]])
+
 
 def p_Stmt(p):
     '''Stmt : Exp SEMI
@@ -263,11 +272,12 @@ def p_Stmt(p):
 	| FlowCtrl'''
     p[0] = p[1]
 
+
 def p_DefList(p):
     '''DefList : Def SEMI DefList
 	| EMPTY'''
     if len(p) == 4:
-        p[0] = Node('append',[p[1],p[3]])
+        p[0] = Node('append', [p[1], p[3]])
     elif len(p) == 2:
         p[0] = p[1]
 
@@ -276,56 +286,65 @@ def p_Def(p):
     '''Def : DecList'''
     p[0] = p[1]
 
+
 def p_DecHead(p):
     '''DecHead : Specifier Dec'''
-    p[0] = LocalDecNode('dec', [p[1],p[2]])
+    p[0] = LocalDecNode('dec', [p[1], p[2]])
 
 
 def p_DecList(p):
     '''DecList : DecHead
      | DecList COMMA Dec'''
-    if len(p)==2:
+    if len(p) == 2:
         p[0] = p[1]
-    elif len(p)==4:
-        p[0] = LocalDecNode('dec',[p[1].child_node_list[0],p[1],p[3]])
+    elif len(p) == 4:
+        p[0] = LocalDecNode('dec', [p[1].child_node_list[0], p[1], p[3]])
 
 
 def p_Dec(p):
     '''Dec : VarDec
 	| VarDec ASSIGNOP Exp'''
-    if len(p)==2:
+    if len(p) == 2:
         p[0] = p[1]
     else:
         p[0] = Node('init_assign', [p[1], p[3]])
 
 
+def p_PrefixedExp_Mem(p):
+    '''PrefixedExp : STAR Exp
+    | '&' Exp'''
+    p[0] = MemNode(p[1], [p[2]])
+
 def p_PrefixedExp(p):
     '''PrefixedExp : MINUS Exp
-	| NOT Exp
-	| PLUS Exp
-	| STAR Exp
-	| PLUSSLF Exp
-	| SUBSLF Exp
-	| LP TYPE RP Exp'''
-    if len(p)==3:
-        p[0] = Node(p[1]+"prefix",[p[2]])
+    	| NOT Exp
+    	| PLUS Exp
+    	| PLUSSLF Exp
+    	| SUBSLF Exp
+    	| LP TYPE RP Exp'''
+    if len(p) == 3:
+        p[0] = PrefixCalcNode(p[1], [p[2]])
     else:
-        p[0] = Node('force_convert', [p[2]])
+        p[0] = PrefixCalcNode('force_convert', [p[2]])
+
 
 def p_Exp_par(p):
     '''Exp : LP Exp RP'''
-    p[0] = p[1]
+    p[0] = p[2]
+
 
 def p_Exp_Single(p):
     '''Exp : ID
 	| NUMBER'''
     p[0] = Leaf('SINGLE', p[1])
 
+
 def p_Exp_Single_Constant(p):
     '''Exp : DECIMAL
 	| STRINGLITERAL'''
     node = Leaf('SINGLE', p[1])
     p[0] = node
+
 
 def p_Exp(p):
     '''Exp : Exp ASSIGNOP Exp
@@ -336,32 +355,39 @@ def p_Exp(p):
 	| Exp MINUS Exp
 	| Exp STAR Exp
 	| Exp DIV Exp
-	| Exp LB Exp RB
-	| Exp DOT ID
-	| PrefixedExp
-	| FuncCall'''
-    if len(p)==4:
-        p[0] = Node(p[2], [p[1],p[3]])
+	| FuncCall
+	| PrefixedExp'''
+    if len(p) == 4:
+        p[0] = CalcNode(p[2], [p[1], p[3]])
     else:
         p[0] = p[1]
+
+
+def p_Exp_Mem(p):
+    '''Exp : Exp LB Exp RB
+	| Exp DOT ID'''
+    if len(p) == 5:
+        p[0] = MemNode('array_subfix', [p[1], p[3]])
+    elif len(p) == 4:
+        p[0] = MemNode('get_field', [p[1], p[3]])
 
 
 def p_FuncCall(p):
     '''FuncCall : ID LP Args RP
 	| ID LP RP'''
     if len(p) == 5:
-        p[0] = Node('call',[Leaf('ID',p[1]), p[3]])
-    elif len(p)==4:
-        p[0] = Node('call', [Leaf('ID',p[1])])
+        p[0] = Node('call', [Leaf('ID', p[1]), p[3]])
+    elif len(p) == 4:
+        p[0] = Node('call', [Leaf('ID', p[1])])
 
 
 def p_Args(p):
     '''Args : Exp COMMA Args
 	| Exp'''
-    if len(p)==2:
+    if len(p) == 2:
         p[0] = p[1]
-    elif len(p)==4:
-        p[0] = Node('',[p[1],p[3]])
+    elif len(p) == 4:
+        p[0] = Node('', [p[1], p[3]])
 
 
 # Error rule for syntax errors
@@ -377,12 +403,13 @@ s = '''
  * Author : hanxinghua
  *
  */
-int a, b(int a,int b),c;
-
 int main(int argc,int argv, int argb){
-    int a,d,e,f;
-    puts("tyt");
-    return a+c;
+    
+    int a = 0, b = 1;
+    int c = a-b+3;
+    int d;
+    a = b*4;
+    return a+b*(c-a);
 }
 '''
 node = parser.parse(s)
@@ -390,8 +417,8 @@ storage_unit = StorageUnit(None)
 optimizer = TreeOptimizer()
 optimizer.DeleteNone(node)
 optimizer.PromotionNodes(node)
-optimizer.PromotionNodesSpecified(node,["extdec","extdec_fun"])
-optimizer.PromotionNodesSpecified(node,["dec"])
+optimizer.PromotionNodesSpecified(node, ["extdec", "extdec_fun"])
+optimizer.PromotionNodesSpecified(node, ["dec"])
 print(node)
 
 node.start_program(storage_unit)
