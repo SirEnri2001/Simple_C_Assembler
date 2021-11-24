@@ -26,17 +26,19 @@ class Node(BaseNode):
     optr = None
     type = ""
     storage_unit: StorageUnit
+    _fakeCode = []
 
     def __init__(self, optr, sub_node_list: list):
         super(Node, self).__init__(sub_node_list)
         self.optr = optr
-        self.type = "Generic"
+        self.nodeType = "Generic"
+        self._fakeCode = []
 
-    def __str__(self):
-        msg: str = "<" + self.type + " optr='" + self.optr + "'>"
+    def __repr__(self):
+        msg: str = "<" + self.nodeType + " optr='" + self.optr + "'>"
         for node in self.child_node_list:
             msg = msg + "\n" + str(node)
-        msg = msg + "\n</" + self.type + ">"
+        msg = msg + "\n</" + self.nodeType + ">"
         return msg
 
     def set_program(self):
@@ -48,47 +50,72 @@ class Node(BaseNode):
         for node in self.child_node_list:
             node.start_program(self.storage_unit)
 
+    def set_fakeCode(self):
+        pass
+
+    def generate_fakeCode(self):
+        self.set_fakeCode()
+        print(self._fakeCode)
+        for node in self.child_node_list:
+            node.generate_fakeCode()
+
 
 class ExtNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
-        self.type = "Ext"
+        self.nodeType = "Ext"
+        self.type_leaf = None
+        self.id_leaf = None
 
     def set_program(self):
         if self.optr == 'extdec':
-            type_leaf = self.child_node_list[0]
-            id_leaf = self.child_node_list[1]
-            self.storage_unit.add_static(id_leaf.val, type_leaf.val, type_leaf.size)
+            self.type_leaf = self.child_node_list[0]
+            self.id_leaf = self.child_node_list[1]
+            self.storage_unit.add_static(self.id_leaf.val, self.type_leaf.val, self.type_leaf.size)
         if self.optr == 'extdef_func':
             new_su = StorageUnit(self.storage_unit)
             self.storage_unit = new_su
+            self.id_leaf = self.child_node_list[0].id
+            print(self.child_node_list)
+
+    def set_fakeCode(self):
+        if self.optr == 'extdec':
+            return
+        if self.optr == 'extdef_func':
+            self._fakeCode.append('_globl '+self.id_leaf.val)
 
 
 class CalcNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
-        self.type = "Calc"
+        self.nodeType = "Calc"
         self._asm = ""
 
     def set_program(self):
-        pass
-        #self._asm = self.optr + ' ' + self.child_node_list[0].val + ',' + self.child_node_list[1].val
+        self.val = 'T' + str(t_seq)
 
+    def set_fakeCode(self):
+        self.type = self.child_node_list[0].type # Simple implicit type convert
+        if self.optr=='=':
+            self._fakeCode.append("{}{} {},{}".format(
+                instruction_table[self.optr],instr_suffix[self.child_node_list[0].type],
+                self.child_node_list[0].val,self.child_node_list[1].val
+            ))
 
 
 class PrefixCalcNode(CalcNode):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
-        self.type = "PrefixCalc"
+        self.nodeType = "PrefixCalc"
 
     def set_program(self):
-        pass
+        self.val = 'T'+str(t_seq)
 
 
 class MemNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
-        self.type = "MemNode"
+        self.nodeType = "MemNode"
 
     def set_program(self):
         pass
@@ -97,32 +124,45 @@ class MemNode(Node):
 class FunDefNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
-        self.type = "FunDef"
+        self.nodeType = "FunDef"
+        self.retType = None
+        self.id = None
 
     def set_program(self):
-        pass
+        self.retType = self.child_node_list[0]
+        self.id = self.child_node_list[1].child_node_list[0]
+        print(self.id)
 
 
 class LocalDecNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
-        self.type = "LocalDec"
+        self.nodeType = "LocalDec"
+        self.initVal = None
 
     def set_program(self):
         type_leaf = self.child_node_list[0]
         id_leaf = self.child_node_list[1]
-        init_val = None
         if id_leaf.optr is not None and id_leaf.optr == 'init_assign':
-            init_val = id_leaf.child_node_list[1]
+            self.init_val = id_leaf.child_node_list[1]
             id_leaf = id_leaf.child_node_list[0]
         self.storage_unit.add_local(id=id_leaf.val, type=type_leaf.val, size=type_leaf.size)
-        self._asm = 'movl'
+
+    def get_fakecode(self):
+        pass
+
+
+class FunDecNode(Node):
+    def __init__(self, optr, sub_node_list: list):
+        super().__init__(optr, sub_node_list)
+        self.nodeType = "FunDec"
+
 
 
 class CompStmtNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
-        self.type = "CompStmt"
+        self.nodeType = "CompStmt"
 
     def set_program(self):
         new_su = StorageUnit(self.storage_unit)
@@ -132,11 +172,11 @@ class CompStmtNode(Node):
 class Leaf(Node):
     def __init__(self, type, val):
         super(Leaf, self).__init__('', [])
-        self.type = type
+        self.nodeType = type
         self.val = val
 
     def __str__(self):
-        return "<" + str(self.type) + " val='" + str(self.val) + "'/>"
+        return "<" + str(self.nodeType) + " val='" + str(self.val) + "'/>"
 
 
 class IdLeaf(Leaf):
@@ -146,22 +186,54 @@ class IdLeaf(Leaf):
     def set_program(self):
         pass
 
+declared_type = {}
+
+size_table = {
+    'int': 8,
+    'float' : 8,
+    'double' : 8,
+    'pointer' : 8
+}
+
+instr_suffix = {
+    'int':'l'
+}
+
+instruction_table = {
+    '=':'mov',
+    '+':'add',
+    '-':'sub',
+    '*':'imul',
+    '/':'idiv'
+}
 
 class TypeLeaf(Leaf):
     size: int
 
-    def __init__(self, val, size: int):
+    def __init__(self, val):
         super().__init__("Type", val)
-        self.size = size
+        global declared_type
+        self.size = size_table[val]
+        declared_type[val] = self
 
     def set_program(self):
         pass
+
+    @classmethod
+    def getType(cls,val):
+        global declared_type
+        try:
+            typeObj = declared_type[val]
+        except KeyError:
+            typeObj = TypeLeaf(val)
+            declared_type[val] = typeObj
+        return typeObj
 
 
 class TreeOptimizer:
     def DeleteNone(self, root: Node):
         for node in root.child_node_list:
-            if type(node) == Leaf and node.type == 'none':
+            if type(node) == Leaf and node.nodeType == 'none':
                 root.child_node_list.remove(node)
         for node in root.child_node_list:
             self.DeleteNone(node)

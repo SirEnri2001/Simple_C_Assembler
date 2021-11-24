@@ -1,7 +1,74 @@
-<Storage id="0" fields="{}">
-    <Storage id="1"
-             fields="{'argc': <LocalField id='argc' type='int' address='0'/>, 'argv': <LocalField id='argv' type='int' address='4'/>, 'argb': <LocalField id='argb' type='int' address='8'/>}">
-        <Storage id="2"
-                 fields="{'a': <LocalField id='a' type='int' address='0'/>, 'b': <LocalField id='b' type='int' address='4'/>, 'c': <LocalField id='c' type='int' address='8'/>, 'd': <LocalField id='d' type='int' address='12'/>}"></Storage>
-    </Storage>
-</Storage>
+<Generic optr='ExtDefList'>
+    <Ext optr='extdef_func'>
+        <FunDef optr='funhead_def'>
+            <Type val='int'/>
+            <Generic optr='func_dec'>
+                <ID val='main'/>
+                <LocalDec optr='param_dec'>
+                    <Type val='int'/>
+                    <ID val='argc'/>
+                </LocalDec>
+                <LocalDec optr='param_dec'>
+                    <Type val='int'/>
+                    <ID val='argv'/>
+                </LocalDec>
+                <LocalDec optr='param_dec'>
+                    <Type val='int'/>
+                    <ID val='argb'/>
+                </LocalDec>
+            </Generic>
+        </FunDef>
+        <CompStmt optr='compst'>
+            <LocalDec optr='dec'>
+                <Type val='int'/>
+                <Generic optr='init_assign'>
+                    <ID val='a'/>
+                    <SINGLE val='0'/>
+                </Generic>
+            </LocalDec>
+            <LocalDec optr='dec'>
+                <Type val='int'/>
+                <Generic optr='init_assign'>
+                    <ID val='b'/>
+                    <SINGLE val='1'/>
+                </Generic>
+            </LocalDec>
+            <LocalDec optr='dec'>
+                <Type val='int'/>
+                <Generic optr='init_assign'>
+                    <ID val='c'/>
+                    <Calc optr='-'>
+                        <SINGLE val='a'/>
+                        <Calc optr='+'>
+                            <SINGLE val='b'/>
+                            <SINGLE val='3'/>
+                        </Calc>
+                    </Calc>
+                </Generic>
+            </LocalDec>
+            <LocalDec optr='dec'>
+                <Type val='int'/>
+                <ID val='d'/>
+            </LocalDec>
+            <Calc optr='='>
+                <SINGLE val='a'/>
+                <Calc optr='*'>
+                    <SINGLE val='b'/>
+                    <SINGLE val='4'/>
+                </Calc>
+            </Calc>
+            <Generic optr='return'>
+                <Calc optr='+'>
+                    <SINGLE val='a'/>
+                    <Calc optr='*'>
+                        <SINGLE val='b'/>
+                        <Calc optr='-'>
+                            <SINGLE val='c'/>
+                            <SINGLE val='a'/>
+                        </Calc>
+                    </Calc>
+                </Calc>
+            </Generic>
+        </CompStmt>
+    </Ext>
+</Generic>

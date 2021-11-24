@@ -83,7 +83,7 @@ def p_not(p):
 def p_type(p):
     '''TYPE : INT
 	| FLOAT '''
-    p[0] = TypeLeaf(p[1], 4)
+    p[0] = TypeLeaf.getType(p[1])
 
 
 def p_lp(p):
@@ -403,13 +403,8 @@ s = '''
  * Author : hanxinghua
  *
  */
-int main(int argc,int argv, int argb){
-    
-    int a = 0, b = 1;
-    int c = a-b+3;
-    int d;
-    a = b*4;
-    return a+b*(c-a);
+int main(){
+    return 0;
 }
 '''
 node = parser.parse(s)
@@ -422,4 +417,4 @@ optimizer.PromotionNodesSpecified(node, ["dec"])
 print(node)
 
 node.start_program(storage_unit)
-print(storage_unit)
+node.generate_fakeCode()
