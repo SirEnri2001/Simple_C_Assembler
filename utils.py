@@ -168,10 +168,21 @@ class ExtNode(Node):
         return self.fakeCode
 
     def get_targetCode(self) -> list:
-        return self.get_fakeCode()
+        if self.optr == 'extdec':
+            self.targetCode.append('.globl ' + self.child_node_list[0].id.val)
+        if self.optr == 'extdef_func':
+            self.targetCode.append('.globl ' + self.child_node_list[0].id.val)
+        return self.targetCode
 
     def get_targetCode_post(self) -> list:
-        return self.get_fakeCode_post()
+        post = []
+        post.append("leave")
+        post.append("ret")
+        post.extend(self.targetCode_post)
+        self.targetCode_post = post
+        return self.targetCode_post
+
+
 
 class CalcNode(Node):
     def __init__(self, optr, sub_node_list: list):
@@ -182,6 +193,7 @@ class CalcNode(Node):
         global t_seq
         self.val = 'T' + str(t_seq)
         t_seq = t_seq + 1
+        self.asm_val='%eax'
 
     def get_targetCode(self) -> list:
         if self.child_node_list[0].optr=='*':
@@ -302,8 +314,15 @@ class FunDefNode(Node):
         self.fakeCode.append("{}:".format(self.child_node_list[1].child_node_list[0].val))
         return self.fakeCode
 
+
     def get_targetCode_post(self) -> list:
         post = []
+        post.append("{}:".format(self.child_node_list[1].child_node_list[0].val))
+        post.append("pushl %ebp")
+        post.append("movl %esp,%ebp")
+        post.append("subl ${},%esp".format(self.storage_unit.func_calling_space+self.storage_unit.size))
+        post.extend(self.targetCode_post)
+        self.targetCode_post = post
         return self.targetCode_post
 
 
@@ -352,6 +371,17 @@ class StmtNode(Node):
         if self.optr == 'return':
             if self.child_node_list[0] is not None:
                 post.append('retVal = {}'.format(self.child_node_list[0].val))
+            post.append('ret')
+        post.extend(self.fakeCode_post)
+        self.fakeCode_post = post
+        return self.fakeCode_post
+
+    def get_targetCode_post(self) -> list:
+        post = []
+        if self.optr=='return':
+            if self.child_node_list[0] is not None:
+                post.append('movl {},%eax'.format(self.child_node_list[0].val))
+            post.append('leave')
             post.append('ret')
         post.extend(self.fakeCode_post)
         self.fakeCode_post = post
@@ -438,6 +468,8 @@ class Leaf(Node):
         super(Leaf, self).__init__('', [])
         self.nodeType = type
         self.val = val
+        if self.nodeType=='NUM':
+            self.asm_val='$'+str(self.val)
 
     def __str__(self):
         return "<" + str(self.nodeType) + " val='" + str(self.val) + "'/>"
