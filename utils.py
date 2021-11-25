@@ -7,6 +7,7 @@ l_seq = 1
 
 code_integrate = []
 
+
 class BaseNode:
     child_node_list = []
     val = None
@@ -22,10 +23,6 @@ class BaseNode:
         return msg
 
 
-class ProcessNode(BaseNode):
-    pass
-
-
 class Node(BaseNode):
     optr = None
     type = ""
@@ -39,6 +36,7 @@ class Node(BaseNode):
         self.fakeCode_post = []
         self.targetCode = []
         self.targetCode_post = []
+        self.asm_val = ''
 
     def __repr__(self):
         return self.__str__()
@@ -95,6 +93,7 @@ class Node(BaseNode):
     def get_targetCode_post(self) -> list:
         return self.targetCode_post
 
+
 class ProgramNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
@@ -133,6 +132,12 @@ class ExtNode(Node):
             self.fakeCode.append('.globl ' + self.child_node_list[0].id.val)
         return self.fakeCode
 
+    def get_targetCode(self) -> list:
+        return self.get_fakeCode()
+
+    def get_targetCode_post(self) -> list:
+        return self.get_fakeCode_post()
+
 
 class CalcNode(Node):
     def __init__(self, optr, sub_node_list: list):
@@ -142,7 +147,46 @@ class CalcNode(Node):
     def set_program(self):
         global t_seq
         self.val = 'T' + str(t_seq)
-        t_seq = t_seq+1
+        t_seq = t_seq + 1
+
+    def get_targetCode(self) -> list:
+        if self.child_node_list[0].optr=='*':
+            self.child_node_list[1].asm_val = '%edx'
+        if self.child_node_list[0].optr=='/':
+            self.child_node_list[1].asm_val = '%ecx'
+        return self.targetCode
+
+    def get_targetCode_post(self) -> list:
+        post = []
+        temp_res = '%eax'
+        self.type = self.child_node_list[0].type  # Simple implicit type convert
+        try:
+            if self.optr == '=':
+                post.append("mov{} {},{}".format(self.child_node_list[0].type,
+                                                 self.child_node_list[1].asm_val,self.child_node_list[0].asm_val))
+                self.asm_val = self.child_node_list[0].asm_val
+            else:
+                if self.optr in ['+', '-', '*']:
+                    post.append(
+                        "{}{} {},{}".format(instruction_table[self.optr], instr_suffix[self.type],
+                                            self.child_node_list[0].asm_val, self.child_node_list[1].asm_val))
+                if self.optr in ['/','%']:
+                    if self.child_node_list[0].asm_val != '%eax':
+                        post.append("movl {},%eax".format(self.child_node_list[0].asm_val))
+                    post.append('cltd')
+                    post.append('idiv{} {}'.format(instruction_table[self.optr], instr_suffix[self.type],
+                                             self.child_node_list[1].asm_val))
+                    if self.optr in ['%']:
+                        temp_res = '%edx'
+
+
+        except KeyError as e:
+            print("Compiler Error: Key Error in Calc\n\toptr: {}, type: {}".format(
+                self.optr, self.child_node_list[0].type
+            ))
+        post.extend(self.targetCode_post)
+        self.targetCode_post = post
+        return self.targetCode_post
 
     def get_fakeCode_post(self) -> list:
         post = []
@@ -191,14 +235,13 @@ class PrefixCalcNode(CalcNode):
         super().__init__(optr, sub_node_list)
         self.nodeType = "PrefixCalc"
 
-    def get_fakeCode(self):
+    def get_fakeCode_post(self):
+        post = []
         self.type = self.child_node_list[0].type  # Simple implicit type convert
-        if self.optr == '=':
-            self.fakeCode.append("{}{} {}".format(
-                prefix_instruction_table[self.optr], instr_suffix[self.child_node_list[0].type],
-                self.child_node_list[0].val
-            ))
-        return self.fakeCode
+        if self.optr == '+' or self.optr == '-':
+            post.append("{} = {}{}".format(self.val, self.optr, self.child_node_list[0].val))
+        self.fakeCode_post.extend(post)
+        return self.fakeCode_post
 
 
 class MemNode(Node):
@@ -239,9 +282,6 @@ class LocalDecNode(Node):
             self.init_val = id_leaf.child_node_list[1]
             id_leaf = id_leaf.child_node_list[0]
         self.storage_unit.add_local(id=id_leaf.val, type=type_leaf.val, size=type_leaf.size)
-
-    def get_fakeCode(self):
-        pass
 
 
 class FunDecNode(Node):
@@ -289,22 +329,22 @@ class FlowCtrlNode(StmtNode):
 
     def get_fakeCode(self):
         global l_seq
-        if self.optr=='if':
+        if self.optr == 'if':
             label = "L{}".format(l_seq)
-            l_seq = l_seq+1
+            l_seq = l_seq + 1
             self.child_node_list[1].fakeCode.append("cmp {},0".format(self.child_node_list[0].val))
             self.child_node_list[1].fakeCode.append("je {}".format(label))
             self.fakeCode_post.append("{}:".format(label))
-        if self.optr=='if_else':
+        if self.optr == 'if_else':
             label1 = "L{}".format(l_seq)
-            label2 = "L{}".format(l_seq+1)
+            label2 = "L{}".format(l_seq + 1)
             l_seq = l_seq + 2
             self.child_node_list[1].fakeCode.append("cmp {},0".format(self.child_node_list[0].val))
             self.child_node_list[1].fakeCode.append("je {}".format(label1))
             self.child_node_list[2].fakeCode.append("jmp {}".format(label2))
             self.child_node_list[2].fakeCode.append("{}:".format(label1))
             self.fakeCode_post.append("{}:".format(label2))
-        if self.optr=='while':
+        if self.optr == 'while':
             label1 = "L{}".format(l_seq)
             label2 = "L{}".format(l_seq + 1)
             l_seq = l_seq + 2
@@ -314,6 +354,7 @@ class FlowCtrlNode(StmtNode):
             self.fakeCode_post.append("jmp {}".format(label1))
             self.fakeCode_post.append("{}:".format(label2))
         return self.fakeCode
+
 
 class Leaf(Node):
     def __init__(self, type, val):

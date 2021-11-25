@@ -32,7 +32,8 @@ reserved = {
     'do': 'DO',
     'if': 'IF',
     'while': 'WHILE',
-    'static': 'STATIC'
+    'static': 'STATIC',
+    'print': 'PRINT'
 }
 
 # List of token names.   This is always required
