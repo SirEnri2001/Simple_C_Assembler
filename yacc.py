@@ -128,9 +128,9 @@ def p_FunDec(p):
     '''FunDec : ID '(' VarList ')'
 	| ID '(' ')' '''
     if len(p) == 5:
-        p[0] = Node('func_dec', [Leaf('ID', p[1]), p[3]])
+        p[0] = Node('append', [Leaf('ID', p[1]), p[3]])
     elif len(p) == 4:
-        p[0] = Node('func_dec', [Leaf('ID', p[1])])
+        p[0] = Node('append', [Leaf('ID', p[1])])
 
 
 def p_VarList(p):
@@ -166,8 +166,8 @@ def p_Stmt_return(p):
     p[0] = StmtNode('return', [p[2]])
 
 def p_Stmt_print(p):
-    '''Stmt : PRINT Exp ';' '''
-    p[0] = StmtNode('print',[p[2]])
+    '''Stmt : PRINT '(' Exp ')' ';' '''
+    p[0] = StmtNode('print',[p[3]])
 
 def p_FlowCtrl(p):
     '''FlowCtrl : IF '(' Exp ')' Stmt
@@ -304,9 +304,9 @@ def p_FuncCall(p):
     '''FuncCall : ID '(' Args ')'
 	| ID '(' ')' '''
     if len(p) == 5:
-        p[0] = FuncCallNode('call', [Leaf('ID', p[1]), p[3]])
+        p[0] = FuncCallNode('call', [IdLeaf(p[1]), p[3]])
     elif len(p) == 4:
-        p[0] = FuncCallNode('call', [Leaf('ID', p[1])])
+        p[0] = FuncCallNode('call', [IdLeaf(p[1])])
 
 
 def p_Args(p):
@@ -315,7 +315,7 @@ def p_Args(p):
     if len(p) == 2:
         p[0] = p[1]
     elif len(p) == 4:
-        p[0] = Node('', [p[1], p[3]])
+        p[0] = Node('append', [p[1], p[3]])
 
 
 # Error rule for syntax errors
@@ -331,15 +331,12 @@ s = '''
  *
  */
  int func1(int i,int j){
-    int a,b,c,d;
-    return a*-b+c*d;
+    return i+j;
  }
  
 int main(){
     int a = 1, b = 2,c=3;
-    while(a<b){
-        c = c + 3;
-    }
+    c = c + 3;
     func1(a,b);
     print(c);
     return 0;
@@ -352,10 +349,7 @@ optimizer.DeleteNone(node)
 optimizer.PromotionNodes(node)
 optimizer.PromotionNodesSpecified(node, ["extdec", "extdec_fun"])
 optimizer.PromotionNodesSpecified(node, ["dec"])
-print(node)
-
 node.start_program(storage_unit)
-print(node.storage_unit)
 for code in node.generate_targetCode():
     if re.match(".*[.:].*",code):
         print(code)

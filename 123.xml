@@ -2,17 +2,15 @@
     <Ext optr='extdef_func'>
         <FunDef optr='funhead_def'>
             <Type val='int'/>
-            <Generic optr='func_dec'>
-                <ID val='func1'/>
-                <LocalDec optr='param_dec'>
-                    <Type val='int'/>
-                    <ID val='i'/>
-                </LocalDec>
-                <LocalDec optr='param_dec'>
-                    <Type val='int'/>
-                    <ID val='j'/>
-                </LocalDec>
-            </Generic>
+            <ID val='func1'/>
+            <LocalDec optr='param_dec'>
+                <Type val='int'/>
+                <ID val='i'/>
+            </LocalDec>
+            <LocalDec optr='param_dec'>
+                <Type val='int'/>
+                <ID val='j'/>
+            </LocalDec>
         </FunDef>
         <CompStmt optr='compst'>
             <LocalDec optr='dec'>
@@ -50,9 +48,7 @@
     <Ext optr='extdef_func'>
         <FunDef optr='funhead_def'>
             <Type val='int'/>
-            <Generic optr='func_dec'>
-                <ID val='main'/>
-            </Generic>
+            <ID val='main'/>
         </FunDef>
         <CompStmt optr='compst'>
             <LocalDec optr='dec'>
@@ -91,13 +87,13 @@
                     </Calc>
                 </CompStmt>
             </FlowCtrl>
-            <Generic optr='call'>
+            <Calc optr='call'>
                 <ID val='func1'/>
                 <Generic optr=''>
                     <Identifier val='a'/>
                     <Identifier val='b'/>
                 </Generic>
-            </Generic>
+            </Calc>
             <Stmt optr='print'>
                 <Identifier val='c'/>
             </Stmt>

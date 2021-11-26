@@ -82,7 +82,7 @@ Rule 36    CompSt -> { DefList StmtList }
 Rule 37    StmtList -> Stmt StmtList
 Rule 38    StmtList -> EMPTY
 Rule 39    Stmt -> RETURN Exp ;
-Rule 40    Stmt -> PRINT Exp ;
+Rule 40    Stmt -> PRINT ( Exp ) ;
 Rule 41    FlowCtrl -> IF ( Exp ) Stmt
 Rule 42    FlowCtrl -> IF ( Exp ) Stmt ELSE Stmt
 Rule 43    FlowCtrl -> WHILE ( Exp ) Stmt
@@ -132,8 +132,8 @@ Terminals, with rules where they appear
 
 !                    : 77
 &                    : 57
-(                    : 31 32 41 42 43 62 63 81 82
-)                    : 31 32 41 42 43 62 63 81 82
+(                    : 31 32 40 41 42 43 62 63 81 82
+)                    : 31 32 40 41 42 43 62 63 81 82
 *                    : 56 71
 +                    : 59 69
 ,                    : 16 18 33 53 83
@@ -664,7 +664,7 @@ state 32
     (37) StmtList -> . Stmt StmtList
     (38) StmtList -> . EMPTY
     (39) Stmt -> . RETURN Exp ;
-    (40) Stmt -> . PRINT Exp ;
+    (40) Stmt -> . PRINT ( Exp ) ;
     (44) Stmt -> . Exp ;
     (45) Stmt -> . CompSt
     (46) Stmt -> . ;
@@ -706,7 +706,7 @@ state 32
     PRINT           shift and go to state 50
     ;               shift and go to state 49
     }               reduce using rule 1 (EMPTY -> .)
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -726,8 +726,8 @@ state 32
     Stmt                           shift and go to state 45
     EMPTY                          shift and go to state 46
     Exp                            shift and go to state 48
-    CompSt                         shift and go to state 51
-    FlowCtrl                       shift and go to state 52
+    CompSt                         shift and go to state 52
+    FlowCtrl                       shift and go to state 53
     FuncCall                       shift and go to state 61
     PrefixedExp                    shift and go to state 62
 
@@ -879,7 +879,7 @@ state 45
     (37) StmtList -> . Stmt StmtList
     (38) StmtList -> . EMPTY
     (39) Stmt -> . RETURN Exp ;
-    (40) Stmt -> . PRINT Exp ;
+    (40) Stmt -> . PRINT ( Exp ) ;
     (44) Stmt -> . Exp ;
     (45) Stmt -> . CompSt
     (46) Stmt -> . ;
@@ -921,7 +921,7 @@ state 45
     PRINT           shift and go to state 50
     ;               shift and go to state 49
     }               reduce using rule 1 (EMPTY -> .)
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -941,8 +941,8 @@ state 45
     StmtList                       shift and go to state 80
     EMPTY                          shift and go to state 46
     Exp                            shift and go to state 48
-    CompSt                         shift and go to state 51
-    FlowCtrl                       shift and go to state 52
+    CompSt                         shift and go to state 52
+    FlowCtrl                       shift and go to state 53
     FuncCall                       shift and go to state 61
     PrefixedExp                    shift and go to state 62
 
@@ -984,7 +984,7 @@ state 47
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -1068,105 +1068,12 @@ state 49
 
 state 50
 
-    (40) Stmt -> PRINT . Exp ;
-    (63) Exp -> . ( Exp )
-    (64) Exp -> . ID
-    (65) Exp -> . NUMBER
-    (66) Exp -> . DECIMAL
-    (67) Exp -> . STRINGLITERAL
-    (68) Exp -> . Exp = Exp
-    (69) Exp -> . Exp + Exp
-    (70) Exp -> . Exp - Exp
-    (71) Exp -> . Exp * Exp
-    (72) Exp -> . Exp / Exp
-    (73) Exp -> . FuncCall
-    (74) Exp -> . PrefixedExp
-    (75) Exp -> . Exp BOOLAND Exp
-    (76) Exp -> . Exp BOOLOR Exp
-    (77) Exp -> . ! Exp
-    (78) Exp -> . Exp RELOP Exp
-    (79) Exp -> . Exp [ Exp ]
-    (80) Exp -> . Exp . ID
-    (81) FuncCall -> . ID ( Args )
-    (82) FuncCall -> . ID ( )
-    (56) PrefixedExp -> . * Exp
-    (57) PrefixedExp -> . & Exp
-    (58) PrefixedExp -> . - Exp
-    (59) PrefixedExp -> . + Exp
-    (60) PrefixedExp -> . PLUSSLF Exp
-    (61) PrefixedExp -> . SUBSLF Exp
-    (62) PrefixedExp -> . ( TYPE ) Exp
+    (40) Stmt -> PRINT . ( Exp ) ;
 
-    (               shift and go to state 53
-    ID              shift and go to state 54
-    NUMBER          shift and go to state 55
-    DECIMAL         shift and go to state 56
-    STRINGLITERAL   shift and go to state 57
-    !               shift and go to state 63
-    *               shift and go to state 60
-    &               shift and go to state 66
-    -               shift and go to state 59
-    +               shift and go to state 58
-    PLUSSLF         shift and go to state 67
-    SUBSLF          shift and go to state 68
+    (               shift and go to state 99
 
-    Exp                            shift and go to state 99
-    FuncCall                       shift and go to state 61
-    PrefixedExp                    shift and go to state 62
 
 state 51
-
-    (45) Stmt -> CompSt .
-
-    RETURN          reduce using rule 45 (Stmt -> CompSt .)
-    PRINT           reduce using rule 45 (Stmt -> CompSt .)
-    ;               reduce using rule 45 (Stmt -> CompSt .)
-    (               reduce using rule 45 (Stmt -> CompSt .)
-    ID              reduce using rule 45 (Stmt -> CompSt .)
-    NUMBER          reduce using rule 45 (Stmt -> CompSt .)
-    DECIMAL         reduce using rule 45 (Stmt -> CompSt .)
-    STRINGLITERAL   reduce using rule 45 (Stmt -> CompSt .)
-    !               reduce using rule 45 (Stmt -> CompSt .)
-    {               reduce using rule 45 (Stmt -> CompSt .)
-    IF              reduce using rule 45 (Stmt -> CompSt .)
-    WHILE           reduce using rule 45 (Stmt -> CompSt .)
-    *               reduce using rule 45 (Stmt -> CompSt .)
-    &               reduce using rule 45 (Stmt -> CompSt .)
-    -               reduce using rule 45 (Stmt -> CompSt .)
-    +               reduce using rule 45 (Stmt -> CompSt .)
-    PLUSSLF         reduce using rule 45 (Stmt -> CompSt .)
-    SUBSLF          reduce using rule 45 (Stmt -> CompSt .)
-    }               reduce using rule 45 (Stmt -> CompSt .)
-    ELSE            reduce using rule 45 (Stmt -> CompSt .)
-
-
-state 52
-
-    (47) Stmt -> FlowCtrl .
-
-    RETURN          reduce using rule 47 (Stmt -> FlowCtrl .)
-    PRINT           reduce using rule 47 (Stmt -> FlowCtrl .)
-    ;               reduce using rule 47 (Stmt -> FlowCtrl .)
-    (               reduce using rule 47 (Stmt -> FlowCtrl .)
-    ID              reduce using rule 47 (Stmt -> FlowCtrl .)
-    NUMBER          reduce using rule 47 (Stmt -> FlowCtrl .)
-    DECIMAL         reduce using rule 47 (Stmt -> FlowCtrl .)
-    STRINGLITERAL   reduce using rule 47 (Stmt -> FlowCtrl .)
-    !               reduce using rule 47 (Stmt -> FlowCtrl .)
-    {               reduce using rule 47 (Stmt -> FlowCtrl .)
-    IF              reduce using rule 47 (Stmt -> FlowCtrl .)
-    WHILE           reduce using rule 47 (Stmt -> FlowCtrl .)
-    *               reduce using rule 47 (Stmt -> FlowCtrl .)
-    &               reduce using rule 47 (Stmt -> FlowCtrl .)
-    -               reduce using rule 47 (Stmt -> FlowCtrl .)
-    +               reduce using rule 47 (Stmt -> FlowCtrl .)
-    PLUSSLF         reduce using rule 47 (Stmt -> FlowCtrl .)
-    SUBSLF          reduce using rule 47 (Stmt -> FlowCtrl .)
-    }               reduce using rule 47 (Stmt -> FlowCtrl .)
-    ELSE            reduce using rule 47 (Stmt -> FlowCtrl .)
-
-
-state 53
 
     (63) Exp -> ( . Exp )
     (62) PrefixedExp -> ( . TYPE ) Exp
@@ -1200,7 +1107,7 @@ state 53
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -1219,6 +1126,58 @@ state 53
     TYPE                           shift and go to state 101
     FuncCall                       shift and go to state 61
     PrefixedExp                    shift and go to state 62
+
+state 52
+
+    (45) Stmt -> CompSt .
+
+    RETURN          reduce using rule 45 (Stmt -> CompSt .)
+    PRINT           reduce using rule 45 (Stmt -> CompSt .)
+    ;               reduce using rule 45 (Stmt -> CompSt .)
+    (               reduce using rule 45 (Stmt -> CompSt .)
+    ID              reduce using rule 45 (Stmt -> CompSt .)
+    NUMBER          reduce using rule 45 (Stmt -> CompSt .)
+    DECIMAL         reduce using rule 45 (Stmt -> CompSt .)
+    STRINGLITERAL   reduce using rule 45 (Stmt -> CompSt .)
+    !               reduce using rule 45 (Stmt -> CompSt .)
+    {               reduce using rule 45 (Stmt -> CompSt .)
+    IF              reduce using rule 45 (Stmt -> CompSt .)
+    WHILE           reduce using rule 45 (Stmt -> CompSt .)
+    *               reduce using rule 45 (Stmt -> CompSt .)
+    &               reduce using rule 45 (Stmt -> CompSt .)
+    -               reduce using rule 45 (Stmt -> CompSt .)
+    +               reduce using rule 45 (Stmt -> CompSt .)
+    PLUSSLF         reduce using rule 45 (Stmt -> CompSt .)
+    SUBSLF          reduce using rule 45 (Stmt -> CompSt .)
+    }               reduce using rule 45 (Stmt -> CompSt .)
+    ELSE            reduce using rule 45 (Stmt -> CompSt .)
+
+
+state 53
+
+    (47) Stmt -> FlowCtrl .
+
+    RETURN          reduce using rule 47 (Stmt -> FlowCtrl .)
+    PRINT           reduce using rule 47 (Stmt -> FlowCtrl .)
+    ;               reduce using rule 47 (Stmt -> FlowCtrl .)
+    (               reduce using rule 47 (Stmt -> FlowCtrl .)
+    ID              reduce using rule 47 (Stmt -> FlowCtrl .)
+    NUMBER          reduce using rule 47 (Stmt -> FlowCtrl .)
+    DECIMAL         reduce using rule 47 (Stmt -> FlowCtrl .)
+    STRINGLITERAL   reduce using rule 47 (Stmt -> FlowCtrl .)
+    !               reduce using rule 47 (Stmt -> FlowCtrl .)
+    {               reduce using rule 47 (Stmt -> FlowCtrl .)
+    IF              reduce using rule 47 (Stmt -> FlowCtrl .)
+    WHILE           reduce using rule 47 (Stmt -> FlowCtrl .)
+    *               reduce using rule 47 (Stmt -> FlowCtrl .)
+    &               reduce using rule 47 (Stmt -> FlowCtrl .)
+    -               reduce using rule 47 (Stmt -> FlowCtrl .)
+    +               reduce using rule 47 (Stmt -> FlowCtrl .)
+    PLUSSLF         reduce using rule 47 (Stmt -> FlowCtrl .)
+    SUBSLF          reduce using rule 47 (Stmt -> FlowCtrl .)
+    }               reduce using rule 47 (Stmt -> FlowCtrl .)
+    ELSE            reduce using rule 47 (Stmt -> FlowCtrl .)
+
 
 state 54
 
@@ -1354,7 +1313,7 @@ state 58
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -1402,7 +1361,7 @@ state 59
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -1450,7 +1409,7 @@ state 60
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -1548,7 +1507,7 @@ state 63
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -1611,7 +1570,7 @@ state 66
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -1659,7 +1618,7 @@ state 67
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -1707,7 +1666,7 @@ state 68
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2010,7 +1969,7 @@ state 83
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2058,7 +2017,7 @@ state 84
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2106,7 +2065,7 @@ state 85
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2154,7 +2113,7 @@ state 86
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2202,7 +2161,7 @@ state 87
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2250,7 +2209,7 @@ state 88
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2298,7 +2257,7 @@ state 89
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2346,7 +2305,7 @@ state 90
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2394,7 +2353,7 @@ state 91
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2528,42 +2487,51 @@ state 98
 
 state 99
 
-    (40) Stmt -> PRINT Exp . ;
-    (68) Exp -> Exp . = Exp
-    (69) Exp -> Exp . + Exp
-    (70) Exp -> Exp . - Exp
-    (71) Exp -> Exp . * Exp
-    (72) Exp -> Exp . / Exp
-    (75) Exp -> Exp . BOOLAND Exp
-    (76) Exp -> Exp . BOOLOR Exp
-    (78) Exp -> Exp . RELOP Exp
-    (79) Exp -> Exp . [ Exp ]
-    (80) Exp -> Exp . . ID
-    (2) RELOP -> . >
-    (3) RELOP -> . <
-    (4) RELOP -> . GRTREQL
-    (5) RELOP -> . LESSEQL
-    (6) RELOP -> . EQUAL
-    (7) RELOP -> . NEQUAL
+    (40) Stmt -> PRINT ( . Exp ) ;
+    (63) Exp -> . ( Exp )
+    (64) Exp -> . ID
+    (65) Exp -> . NUMBER
+    (66) Exp -> . DECIMAL
+    (67) Exp -> . STRINGLITERAL
+    (68) Exp -> . Exp = Exp
+    (69) Exp -> . Exp + Exp
+    (70) Exp -> . Exp - Exp
+    (71) Exp -> . Exp * Exp
+    (72) Exp -> . Exp / Exp
+    (73) Exp -> . FuncCall
+    (74) Exp -> . PrefixedExp
+    (75) Exp -> . Exp BOOLAND Exp
+    (76) Exp -> . Exp BOOLOR Exp
+    (77) Exp -> . ! Exp
+    (78) Exp -> . Exp RELOP Exp
+    (79) Exp -> . Exp [ Exp ]
+    (80) Exp -> . Exp . ID
+    (81) FuncCall -> . ID ( Args )
+    (82) FuncCall -> . ID ( )
+    (56) PrefixedExp -> . * Exp
+    (57) PrefixedExp -> . & Exp
+    (58) PrefixedExp -> . - Exp
+    (59) PrefixedExp -> . + Exp
+    (60) PrefixedExp -> . PLUSSLF Exp
+    (61) PrefixedExp -> . SUBSLF Exp
+    (62) PrefixedExp -> . ( TYPE ) Exp
 
-    ;               shift and go to state 128
-    =               shift and go to state 83
-    +               shift and go to state 84
-    -               shift and go to state 85
-    *               shift and go to state 86
-    /               shift and go to state 87
-    BOOLAND         shift and go to state 88
-    BOOLOR          shift and go to state 89
-    [               shift and go to state 91
-    .               shift and go to state 92
-    >               shift and go to state 93
-    <               shift and go to state 94
-    GRTREQL         shift and go to state 95
-    LESSEQL         shift and go to state 96
-    EQUAL           shift and go to state 97
-    NEQUAL          shift and go to state 98
+    (               shift and go to state 51
+    ID              shift and go to state 54
+    NUMBER          shift and go to state 55
+    DECIMAL         shift and go to state 56
+    STRINGLITERAL   shift and go to state 57
+    !               shift and go to state 63
+    *               shift and go to state 60
+    &               shift and go to state 66
+    -               shift and go to state 59
+    +               shift and go to state 58
+    PLUSSLF         shift and go to state 67
+    SUBSLF          shift and go to state 68
 
-    RELOP                          shift and go to state 90
+    Exp                            shift and go to state 128
+    FuncCall                       shift and go to state 61
+    PrefixedExp                    shift and go to state 62
 
 state 100
 
@@ -2646,7 +2614,7 @@ state 102
     (62) PrefixedExp -> . ( TYPE ) Exp
 
     )               shift and go to state 132
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2943,7 +2911,7 @@ state 107
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -2991,7 +2959,7 @@ state 108
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -3291,7 +3259,7 @@ state 114
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -3939,29 +3907,42 @@ state 127
 
 state 128
 
-    (40) Stmt -> PRINT Exp ; .
+    (40) Stmt -> PRINT ( Exp . ) ;
+    (68) Exp -> Exp . = Exp
+    (69) Exp -> Exp . + Exp
+    (70) Exp -> Exp . - Exp
+    (71) Exp -> Exp . * Exp
+    (72) Exp -> Exp . / Exp
+    (75) Exp -> Exp . BOOLAND Exp
+    (76) Exp -> Exp . BOOLOR Exp
+    (78) Exp -> Exp . RELOP Exp
+    (79) Exp -> Exp . [ Exp ]
+    (80) Exp -> Exp . . ID
+    (2) RELOP -> . >
+    (3) RELOP -> . <
+    (4) RELOP -> . GRTREQL
+    (5) RELOP -> . LESSEQL
+    (6) RELOP -> . EQUAL
+    (7) RELOP -> . NEQUAL
 
-    RETURN          reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    PRINT           reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    ;               reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    (               reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    ID              reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    NUMBER          reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    DECIMAL         reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    STRINGLITERAL   reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    !               reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    {               reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    IF              reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    WHILE           reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    *               reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    &               reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    -               reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    +               reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    PLUSSLF         reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    SUBSLF          reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    }               reduce using rule 40 (Stmt -> PRINT Exp ; .)
-    ELSE            reduce using rule 40 (Stmt -> PRINT Exp ; .)
+    )               shift and go to state 138
+    =               shift and go to state 83
+    +               shift and go to state 84
+    -               shift and go to state 85
+    *               shift and go to state 86
+    /               shift and go to state 87
+    BOOLAND         shift and go to state 88
+    BOOLOR          shift and go to state 89
+    [               shift and go to state 91
+    .               shift and go to state 92
+    >               shift and go to state 93
+    <               shift and go to state 94
+    GRTREQL         shift and go to state 95
+    LESSEQL         shift and go to state 96
+    EQUAL           shift and go to state 97
+    NEQUAL          shift and go to state 98
 
+    RELOP                          shift and go to state 90
 
 state 129
 
@@ -4019,7 +4000,7 @@ state 130
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -4032,7 +4013,7 @@ state 130
     PLUSSLF         shift and go to state 67
     SUBSLF          shift and go to state 68
 
-    Exp                            shift and go to state 138
+    Exp                            shift and go to state 139
     FuncCall                       shift and go to state 61
     PrefixedExp                    shift and go to state 62
 
@@ -4040,7 +4021,7 @@ state 131
 
     (81) FuncCall -> ID ( Args . )
 
-    )               shift and go to state 139
+    )               shift and go to state 140
 
 
 state 132
@@ -4089,7 +4070,7 @@ state 133
     (6) RELOP -> . EQUAL
     (7) RELOP -> . NEQUAL
 
-    ,               shift and go to state 140
+    ,               shift and go to state 141
     )               reduce using rule 84 (Args -> Exp .)
     =               shift and go to state 83
     +               shift and go to state 84
@@ -4130,7 +4111,7 @@ state 134
     (6) RELOP -> . EQUAL
     (7) RELOP -> . NEQUAL
 
-    )               shift and go to state 141
+    )               shift and go to state 142
     =               shift and go to state 83
     +               shift and go to state 84
     -               shift and go to state 85
@@ -4169,7 +4150,7 @@ state 135
     (6) RELOP -> . EQUAL
     (7) RELOP -> . NEQUAL
 
-    )               shift and go to state 142
+    )               shift and go to state 143
     =               shift and go to state 83
     +               shift and go to state 84
     -               shift and go to state 85
@@ -4255,6 +4236,13 @@ state 137
 
 state 138
 
+    (40) Stmt -> PRINT ( Exp ) . ;
+
+    ;               shift and go to state 144
+
+
+state 139
+
     (62) PrefixedExp -> ( TYPE ) Exp .
     (68) Exp -> Exp . = Exp
     (69) Exp -> Exp . + Exp
@@ -4326,7 +4314,7 @@ state 138
 
     RELOP                          shift and go to state 90
 
-state 139
+state 140
 
     (81) FuncCall -> ID ( Args ) .
 
@@ -4351,7 +4339,7 @@ state 139
     ,               reduce using rule 81 (FuncCall -> ID ( Args ) .)
 
 
-state 140
+state 141
 
     (83) Args -> Exp , . Args
     (83) Args -> . Exp , Args
@@ -4384,7 +4372,7 @@ state 140
     (61) PrefixedExp -> . SUBSLF Exp
     (62) PrefixedExp -> . ( TYPE ) Exp
 
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -4398,83 +4386,16 @@ state 140
     SUBSLF          shift and go to state 68
 
     Exp                            shift and go to state 133
-    Args                           shift and go to state 143
-    FuncCall                       shift and go to state 61
-    PrefixedExp                    shift and go to state 62
-
-state 141
-
-    (41) FlowCtrl -> IF ( Exp ) . Stmt
-    (42) FlowCtrl -> IF ( Exp ) . Stmt ELSE Stmt
-    (39) Stmt -> . RETURN Exp ;
-    (40) Stmt -> . PRINT Exp ;
-    (44) Stmt -> . Exp ;
-    (45) Stmt -> . CompSt
-    (46) Stmt -> . ;
-    (47) Stmt -> . FlowCtrl
-    (63) Exp -> . ( Exp )
-    (64) Exp -> . ID
-    (65) Exp -> . NUMBER
-    (66) Exp -> . DECIMAL
-    (67) Exp -> . STRINGLITERAL
-    (68) Exp -> . Exp = Exp
-    (69) Exp -> . Exp + Exp
-    (70) Exp -> . Exp - Exp
-    (71) Exp -> . Exp * Exp
-    (72) Exp -> . Exp / Exp
-    (73) Exp -> . FuncCall
-    (74) Exp -> . PrefixedExp
-    (75) Exp -> . Exp BOOLAND Exp
-    (76) Exp -> . Exp BOOLOR Exp
-    (77) Exp -> . ! Exp
-    (78) Exp -> . Exp RELOP Exp
-    (79) Exp -> . Exp [ Exp ]
-    (80) Exp -> . Exp . ID
-    (36) CompSt -> . { DefList StmtList }
-    (41) FlowCtrl -> . IF ( Exp ) Stmt
-    (42) FlowCtrl -> . IF ( Exp ) Stmt ELSE Stmt
-    (43) FlowCtrl -> . WHILE ( Exp ) Stmt
-    (81) FuncCall -> . ID ( Args )
-    (82) FuncCall -> . ID ( )
-    (56) PrefixedExp -> . * Exp
-    (57) PrefixedExp -> . & Exp
-    (58) PrefixedExp -> . - Exp
-    (59) PrefixedExp -> . + Exp
-    (60) PrefixedExp -> . PLUSSLF Exp
-    (61) PrefixedExp -> . SUBSLF Exp
-    (62) PrefixedExp -> . ( TYPE ) Exp
-
-    RETURN          shift and go to state 47
-    PRINT           shift and go to state 50
-    ;               shift and go to state 49
-    (               shift and go to state 53
-    ID              shift and go to state 54
-    NUMBER          shift and go to state 55
-    DECIMAL         shift and go to state 56
-    STRINGLITERAL   shift and go to state 57
-    !               shift and go to state 63
-    {               shift and go to state 22
-    IF              shift and go to state 64
-    WHILE           shift and go to state 65
-    *               shift and go to state 60
-    &               shift and go to state 66
-    -               shift and go to state 59
-    +               shift and go to state 58
-    PLUSSLF         shift and go to state 67
-    SUBSLF          shift and go to state 68
-
-    Exp                            shift and go to state 48
-    Stmt                           shift and go to state 144
-    CompSt                         shift and go to state 51
-    FlowCtrl                       shift and go to state 52
+    Args                           shift and go to state 145
     FuncCall                       shift and go to state 61
     PrefixedExp                    shift and go to state 62
 
 state 142
 
-    (43) FlowCtrl -> WHILE ( Exp ) . Stmt
+    (41) FlowCtrl -> IF ( Exp ) . Stmt
+    (42) FlowCtrl -> IF ( Exp ) . Stmt ELSE Stmt
     (39) Stmt -> . RETURN Exp ;
-    (40) Stmt -> . PRINT Exp ;
+    (40) Stmt -> . PRINT ( Exp ) ;
     (44) Stmt -> . Exp ;
     (45) Stmt -> . CompSt
     (46) Stmt -> . ;
@@ -4514,7 +4435,7 @@ state 142
     RETURN          shift and go to state 47
     PRINT           shift and go to state 50
     ;               shift and go to state 49
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -4531,20 +4452,113 @@ state 142
     SUBSLF          shift and go to state 68
 
     Exp                            shift and go to state 48
-    Stmt                           shift and go to state 145
-    CompSt                         shift and go to state 51
-    FlowCtrl                       shift and go to state 52
+    Stmt                           shift and go to state 146
+    CompSt                         shift and go to state 52
+    FlowCtrl                       shift and go to state 53
     FuncCall                       shift and go to state 61
     PrefixedExp                    shift and go to state 62
 
 state 143
+
+    (43) FlowCtrl -> WHILE ( Exp ) . Stmt
+    (39) Stmt -> . RETURN Exp ;
+    (40) Stmt -> . PRINT ( Exp ) ;
+    (44) Stmt -> . Exp ;
+    (45) Stmt -> . CompSt
+    (46) Stmt -> . ;
+    (47) Stmt -> . FlowCtrl
+    (63) Exp -> . ( Exp )
+    (64) Exp -> . ID
+    (65) Exp -> . NUMBER
+    (66) Exp -> . DECIMAL
+    (67) Exp -> . STRINGLITERAL
+    (68) Exp -> . Exp = Exp
+    (69) Exp -> . Exp + Exp
+    (70) Exp -> . Exp - Exp
+    (71) Exp -> . Exp * Exp
+    (72) Exp -> . Exp / Exp
+    (73) Exp -> . FuncCall
+    (74) Exp -> . PrefixedExp
+    (75) Exp -> . Exp BOOLAND Exp
+    (76) Exp -> . Exp BOOLOR Exp
+    (77) Exp -> . ! Exp
+    (78) Exp -> . Exp RELOP Exp
+    (79) Exp -> . Exp [ Exp ]
+    (80) Exp -> . Exp . ID
+    (36) CompSt -> . { DefList StmtList }
+    (41) FlowCtrl -> . IF ( Exp ) Stmt
+    (42) FlowCtrl -> . IF ( Exp ) Stmt ELSE Stmt
+    (43) FlowCtrl -> . WHILE ( Exp ) Stmt
+    (81) FuncCall -> . ID ( Args )
+    (82) FuncCall -> . ID ( )
+    (56) PrefixedExp -> . * Exp
+    (57) PrefixedExp -> . & Exp
+    (58) PrefixedExp -> . - Exp
+    (59) PrefixedExp -> . + Exp
+    (60) PrefixedExp -> . PLUSSLF Exp
+    (61) PrefixedExp -> . SUBSLF Exp
+    (62) PrefixedExp -> . ( TYPE ) Exp
+
+    RETURN          shift and go to state 47
+    PRINT           shift and go to state 50
+    ;               shift and go to state 49
+    (               shift and go to state 51
+    ID              shift and go to state 54
+    NUMBER          shift and go to state 55
+    DECIMAL         shift and go to state 56
+    STRINGLITERAL   shift and go to state 57
+    !               shift and go to state 63
+    {               shift and go to state 22
+    IF              shift and go to state 64
+    WHILE           shift and go to state 65
+    *               shift and go to state 60
+    &               shift and go to state 66
+    -               shift and go to state 59
+    +               shift and go to state 58
+    PLUSSLF         shift and go to state 67
+    SUBSLF          shift and go to state 68
+
+    Exp                            shift and go to state 48
+    Stmt                           shift and go to state 147
+    CompSt                         shift and go to state 52
+    FlowCtrl                       shift and go to state 53
+    FuncCall                       shift and go to state 61
+    PrefixedExp                    shift and go to state 62
+
+state 144
+
+    (40) Stmt -> PRINT ( Exp ) ; .
+
+    RETURN          reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    PRINT           reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    ;               reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    (               reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    ID              reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    NUMBER          reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    DECIMAL         reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    STRINGLITERAL   reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    !               reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    {               reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    IF              reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    WHILE           reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    *               reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    &               reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    -               reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    +               reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    PLUSSLF         reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    SUBSLF          reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    }               reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+    ELSE            reduce using rule 40 (Stmt -> PRINT ( Exp ) ; .)
+
+
+state 145
 
     (83) Args -> Exp , Args .
 
     )               reduce using rule 83 (Args -> Exp , Args .)
 
 
-state 144
+state 146
 
     (41) FlowCtrl -> IF ( Exp ) Stmt .
     (42) FlowCtrl -> IF ( Exp ) Stmt . ELSE Stmt
@@ -4569,12 +4583,12 @@ state 144
     PLUSSLF         reduce using rule 41 (FlowCtrl -> IF ( Exp ) Stmt .)
     SUBSLF          reduce using rule 41 (FlowCtrl -> IF ( Exp ) Stmt .)
     }               reduce using rule 41 (FlowCtrl -> IF ( Exp ) Stmt .)
-    ELSE            shift and go to state 146
+    ELSE            shift and go to state 148
 
   ! ELSE            [ reduce using rule 41 (FlowCtrl -> IF ( Exp ) Stmt .) ]
 
 
-state 145
+state 147
 
     (43) FlowCtrl -> WHILE ( Exp ) Stmt .
 
@@ -4600,11 +4614,11 @@ state 145
     ELSE            reduce using rule 43 (FlowCtrl -> WHILE ( Exp ) Stmt .)
 
 
-state 146
+state 148
 
     (42) FlowCtrl -> IF ( Exp ) Stmt ELSE . Stmt
     (39) Stmt -> . RETURN Exp ;
-    (40) Stmt -> . PRINT Exp ;
+    (40) Stmt -> . PRINT ( Exp ) ;
     (44) Stmt -> . Exp ;
     (45) Stmt -> . CompSt
     (46) Stmt -> . ;
@@ -4644,7 +4658,7 @@ state 146
     RETURN          shift and go to state 47
     PRINT           shift and go to state 50
     ;               shift and go to state 49
-    (               shift and go to state 53
+    (               shift and go to state 51
     ID              shift and go to state 54
     NUMBER          shift and go to state 55
     DECIMAL         shift and go to state 56
@@ -4661,13 +4675,13 @@ state 146
     SUBSLF          shift and go to state 68
 
     Exp                            shift and go to state 48
-    Stmt                           shift and go to state 147
-    CompSt                         shift and go to state 51
-    FlowCtrl                       shift and go to state 52
+    Stmt                           shift and go to state 149
+    CompSt                         shift and go to state 52
+    FlowCtrl                       shift and go to state 53
     FuncCall                       shift and go to state 61
     PrefixedExp                    shift and go to state 62
 
-state 147
+state 149
 
     (42) FlowCtrl -> IF ( Exp ) Stmt ELSE Stmt .
 
@@ -4815,19 +4829,19 @@ WARNING: shift/reduce conflict for GRTREQL in state 125 resolved as shift
 WARNING: shift/reduce conflict for LESSEQL in state 125 resolved as shift
 WARNING: shift/reduce conflict for EQUAL in state 125 resolved as shift
 WARNING: shift/reduce conflict for NEQUAL in state 125 resolved as shift
-WARNING: shift/reduce conflict for = in state 138 resolved as shift
-WARNING: shift/reduce conflict for + in state 138 resolved as shift
-WARNING: shift/reduce conflict for - in state 138 resolved as shift
-WARNING: shift/reduce conflict for * in state 138 resolved as shift
-WARNING: shift/reduce conflict for / in state 138 resolved as shift
-WARNING: shift/reduce conflict for BOOLAND in state 138 resolved as shift
-WARNING: shift/reduce conflict for BOOLOR in state 138 resolved as shift
-WARNING: shift/reduce conflict for [ in state 138 resolved as shift
-WARNING: shift/reduce conflict for . in state 138 resolved as shift
-WARNING: shift/reduce conflict for > in state 138 resolved as shift
-WARNING: shift/reduce conflict for < in state 138 resolved as shift
-WARNING: shift/reduce conflict for GRTREQL in state 138 resolved as shift
-WARNING: shift/reduce conflict for LESSEQL in state 138 resolved as shift
-WARNING: shift/reduce conflict for EQUAL in state 138 resolved as shift
-WARNING: shift/reduce conflict for NEQUAL in state 138 resolved as shift
-WARNING: shift/reduce conflict for ELSE in state 144 resolved as shift
+WARNING: shift/reduce conflict for = in state 139 resolved as shift
+WARNING: shift/reduce conflict for + in state 139 resolved as shift
+WARNING: shift/reduce conflict for - in state 139 resolved as shift
+WARNING: shift/reduce conflict for * in state 139 resolved as shift
+WARNING: shift/reduce conflict for / in state 139 resolved as shift
+WARNING: shift/reduce conflict for BOOLAND in state 139 resolved as shift
+WARNING: shift/reduce conflict for BOOLOR in state 139 resolved as shift
+WARNING: shift/reduce conflict for [ in state 139 resolved as shift
+WARNING: shift/reduce conflict for . in state 139 resolved as shift
+WARNING: shift/reduce conflict for > in state 139 resolved as shift
+WARNING: shift/reduce conflict for < in state 139 resolved as shift
+WARNING: shift/reduce conflict for GRTREQL in state 139 resolved as shift
+WARNING: shift/reduce conflict for LESSEQL in state 139 resolved as shift
+WARNING: shift/reduce conflict for EQUAL in state 139 resolved as shift
+WARNING: shift/reduce conflict for NEQUAL in state 139 resolved as shift
+WARNING: shift/reduce conflict for ELSE in state 146 resolved as shift

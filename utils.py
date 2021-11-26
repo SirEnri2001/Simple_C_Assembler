@@ -6,7 +6,6 @@ stack_trace_length = 8
 
 code_integrate = []
 
-
 declared_type = {}
 
 size_table = {
@@ -42,6 +41,7 @@ conditional_jmp_table = {
     '<': 'jl',
     '<=': 'jle'
 }
+
 
 class BaseNode:
     child_node_list = []
@@ -86,11 +86,15 @@ class Node(BaseNode):
     def set_program(self):
         pass
 
+    def set_program_post(self):
+        pass
+
     def start_program(self, su: StorageUnit):
         self.storage_unit = su
         self.set_program()
         for node in self.child_node_list:
             node.start_program(self.storage_unit)
+        self.set_program_post()
 
     def get_fakeCode(self) -> list:
         return self.fakeCode
@@ -160,6 +164,10 @@ class ExtNode(Node):
             self.storage_unit = new_su
             self.id_leaf = self.child_node_list[0].id
 
+    def set_program_post(self):
+        if self.optr == 'extdef_func':
+            self.storage_unit.add_size(self.storage_unit.get_func_calling_space())
+
     def get_fakeCode(self) -> list:
         if self.optr == 'extdec':
             self.fakeCode.append('.globl ' + self.child_node_list[0].id.val)
@@ -169,19 +177,19 @@ class ExtNode(Node):
 
     def get_targetCode(self) -> list:
         if self.optr == 'extdec':
-            self.targetCode.append('.globl ' + self.child_node_list[0].id.val)
+            self.targetCode.append('.globl ' + self.child_node_list[0].val)
         if self.optr == 'extdef_func':
-            self.targetCode.append('.globl ' + self.child_node_list[0].id.val)
+            self.targetCode.append('.globl ' + self.child_node_list[0].id)
         return self.targetCode
 
     def get_targetCode_post(self) -> list:
         post = []
-        post.append("leave")
-        post.append("ret")
+        if self.child_node_list[1].child_node_list[-1].optr != 'return':
+            post.append("leave")
+            post.append("ret")
         post.extend(self.targetCode_post)
         self.targetCode_post = post
         return self.targetCode_post
-
 
 
 class CalcNode(Node):
@@ -193,13 +201,13 @@ class CalcNode(Node):
         global t_seq
         self.val = 'T' + str(t_seq)
         t_seq = t_seq + 1
-        self.asm_val='%eax'
+        self.asm_val = '%eax'
 
     def get_targetCode(self) -> list:
-        if self.child_node_list[0].optr=='*':
-            self.child_node_list[1].asm_val = '%edx'
-        if self.child_node_list[0].optr=='/':
-            self.child_node_list[1].asm_val = '%ecx'
+        if self.child_node_list[0].optr == '*':
+            self.child_node_list[0].asm_val = '%edx'
+        if self.child_node_list[0].optr == '/':
+            self.child_node_list[0].asm_val = '%ecx'
         return self.targetCode
 
     def get_targetCode_post(self) -> list:
@@ -209,19 +217,26 @@ class CalcNode(Node):
         try:
             if self.optr == '=':
                 post.append("mov{} {},{}".format(instr_suffix[self.child_node_list[0].type],
-                                                 self.child_node_list[1].asm_val,self.child_node_list[0].asm_val))
+                                                 self.child_node_list[1].asm_val, self.child_node_list[0].asm_val))
                 self.asm_val = self.child_node_list[0].asm_val
             else:
                 if self.optr in ['+', '-', '*']:
+                    register = '%edx'
+                    if self.asm_val!='%eax':
+                        register = self.asm_val
                     post.append(
-                        "{}{} {},{}".format(instruction_table[self.optr], instr_suffix[self.type],
-                                            self.child_node_list[0].asm_val, self.child_node_list[1].asm_val))
-                if self.optr in ['/','%']:
+                        "mov{} {},{}".format(instr_suffix[self.type],
+                                             self.child_node_list[0].asm_val, register))
+                    post.append(
+                        "mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[1].asm_val))
+                    post.append(
+                        "{}{} %edx,%eax".format(instruction_table[self.optr], instr_suffix[self.type]))
+                if self.optr in ['/', '%']:
                     if self.child_node_list[0].asm_val != '%eax':
-                        post.append("mov{} {},%eax".format(instr_suffix[self.type],self.child_node_list[0].asm_val))
+                        post.append("mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
                     post.append('cltd')
                     post.append('idiv{} {}'.format(instruction_table[self.optr], instr_suffix[self.type],
-                                             self.child_node_list[1].asm_val))
+                                                   self.child_node_list[1].asm_val))
                     if self.optr in ['%']:
                         temp_res = '%edx'
                 if temp_res != self.asm_val:
@@ -263,8 +278,6 @@ class LogicNode(CalcNode):
     pass
 
 
-
-
 class PrefixCalcNode(CalcNode):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
@@ -281,10 +294,10 @@ class PrefixCalcNode(CalcNode):
     def get_targetCode_post(self) -> list:
         post = []
         self.type = self.child_node_list[0].type  # Simple implicit type convert
-        if self.optr=='-':
-            post.append("neg{} {}".format(instr_suffix[self.type],self.child_node_list[0].asm_val))
+        if self.optr == '-':
+            post.append("neg{} {}".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
         else:
-            post.append("{}{} {}".format(instruction_table[self.optr],instr_suffix[self.type],self.asm_val))
+            post.append("{}{} {}".format(instruction_table[self.optr], instr_suffix[self.type], self.asm_val))
         post.extend(self.fakeCode_post)
         self.fakeCode_post = post
         return self.fakeCode_post
@@ -308,23 +321,24 @@ class FunDefNode(Node):
 
     def set_program(self):
         self.retType = self.child_node_list[0]
-        self.id = self.child_node_list[1].child_node_list[0]
+        self.id = self.child_node_list[1].val
+        self.storage_unit.add_static(self.id, self.retType, 0)
 
     def get_fakeCode(self):
         self.fakeCode.append("{}:".format(self.child_node_list[1].child_node_list[0].val))
         return self.fakeCode
 
-
     def get_targetCode_post(self) -> list:
         post = []
-        post.append("{}:".format(self.child_node_list[1].child_node_list[0].val))
+        post.append("{}:".format(self.id))
         post.append("pushl %ebp")
         post.append("movl %esp,%ebp")
-        post.append("subl ${},%esp".format(self.storage_unit.func_calling_space+self.storage_unit.size))
+        alloc = self.storage_unit.func_calling_space + self.storage_unit.size
+        if alloc != 0:
+            post.append("subl ${},%esp".format(alloc))
         post.extend(self.targetCode_post)
         self.targetCode_post = post
         return self.targetCode_post
-
 
 
 class LocalDecNode(Node):
@@ -339,7 +353,10 @@ class LocalDecNode(Node):
         if id_leaf.optr is not None and id_leaf.optr == 'init_assign':
             self.init_val = id_leaf.child_node_list[1]
             id_leaf = id_leaf.child_node_list[0]
-        self.storage_unit.add_local(id=id_leaf.val, type=type_leaf.val, size=type_leaf.size)
+        if self.optr == 'param_dec':
+            self.storage_unit.add_param(id=id_leaf.val, type=type_leaf.val, size=type_leaf.size)
+        else:
+            self.storage_unit.add_local(id=id_leaf.val, type=type_leaf.val, size=type_leaf.size)
 
 
 class FunDecNode(Node):
@@ -372,15 +389,18 @@ class StmtNode(Node):
             if self.child_node_list[0] is not None:
                 post.append('retVal = {}'.format(self.child_node_list[0].val))
             post.append('ret')
+        if self.optr == 'print':
+            post.append("movl ${},%edx".format(self.child_node_list[0].size))
+            post.append("movl $")
         post.extend(self.fakeCode_post)
         self.fakeCode_post = post
         return self.fakeCode_post
 
     def get_targetCode_post(self) -> list:
         post = []
-        if self.optr=='return':
-            if self.child_node_list[0] is not None:
-                post.append('movl {},%eax'.format(self.child_node_list[0].val))
+        if self.optr == 'return':
+            if self.child_node_list[0] is not None and self.child_node_list[0].asm_val != '%eax':
+                post.append('movl {},%eax'.format(self.child_node_list[0].asm_val))
             post.append('leave')
             post.append('ret')
         post.extend(self.fakeCode_post)
@@ -389,15 +409,20 @@ class StmtNode(Node):
 
 
 class FuncCallNode(CalcNode):
+    def __init__(self, optr, sub_node_list: list):
+        super().__init__(optr, sub_node_list)
+        self.nodeType = 'FuncCall'
+
     def set_program(self):
         pass
 
-    def get_targetCode(self) -> list:
+    def set_program_post(self):
         space = 0
-        for arg in self.child_node_list[1].child_node_list:
+        args = self.child_node_list[1:]
+        for arg in args:
+            arg.field = self.storage_unit.get(arg.val)
             space = arg.field.size + space
-        self.storage_unit.func_calling_space = max(self.storage_unit.func_calling_space,space)
-        return self.targetCode
+        self.storage_unit.func_calling_space = max(self.storage_unit.func_calling_space, space)
 
     def get_targetCode_post(self) -> list:
         post = []
@@ -405,19 +430,19 @@ class FuncCallNode(CalcNode):
         self.type = self.child_node_list[0].type  # Simple implicit type convert
         for arg in self.child_node_list[1].child_node_list:
             field = arg.field
-            if offset==0:
+            if offset == 0:
                 post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, "(%esp)"))
             else:
-                post.append("mov{} {},{}".format(instr_suffix[field.type],arg.asm_val,str(offset)+"(%esp)"))
+                post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, str(offset) + "(%esp)"))
             offset = field.size
-        post.append("{} {}".format("call",self.child_node_list[0].val))
+        post.append("{} {}".format("call", self.child_node_list[0].val))
         post.extend(self.targetCode_post)
         self.targetCode_post = post
         return self.targetCode_post
 
     def get_fakeCode_post(self) -> list:
         post = []
-        if len(self.child_node_list)==2:
+        if len(self.child_node_list) == 2:
             for arg in self.child_node_list[1].child_node_list:
                 post.append("add arg {}".format(arg.val))
         post.append("call {}".format(self.child_node_list[0].val))
@@ -468,8 +493,8 @@ class Leaf(Node):
         super(Leaf, self).__init__('', [])
         self.nodeType = type
         self.val = val
-        if self.nodeType=='NUM':
-            self.asm_val='$'+str(self.val)
+        if self.nodeType == 'NUM':
+            self.asm_val = '$' + str(self.val)
 
     def __str__(self):
         return "<" + str(self.nodeType) + " val='" + str(self.val) + "'/>"
@@ -487,8 +512,17 @@ class IdLeaf(Leaf):
 
     def get_targetCode(self) -> list:
         global stack_trace_length
-        self.asm_val = str(-self.field.offset-self.field.size-stack_trace_length)+"(%ebp)"
+        if type(self.field) == LocalField:
+            self.asm_val = str(-self.field.offset - self.field.size) + "(%ebp)"
+        elif type(self.field) == ParamField:
+            self.asm_val = str(self.field.offset + stack_trace_length) + "(%ebp)"
+        elif type(self.field) == StaticField:
+            self.asm_val = self.field.id
+        else:
+            print("type {}".format(type(self.field)))
+            self.asm_val = "unknown symbol: {}".format(self)
         return self.targetCode
+
 
 class TypeLeaf(Leaf):
     size: int

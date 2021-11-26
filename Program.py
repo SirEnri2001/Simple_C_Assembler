@@ -26,18 +26,30 @@ class LocalField(Field):
     def __repr__(self):
         return "<LocalField id='" + self.id + "' type='" + self.type + "' address='"+str(self.offset)+"'/>"
 
+class ParamField(LocalField):
+    def __init__(self, id, type, size, offset):
+        super().__init__(id, type, size,offset)
+
+    def __repr__(self):
+        return "<ParamField id='" + self.id + "' type='" + self.type + "' address='"+str(self.offset)+"'/>"
+
 class StaticField(Field):
     def __init__(self, id, type, size):
         super().__init__(id, type, size)
 
 
+class FuncField(Field):
+    def __init__(self, id, type):
+        super().__init__(id, type, 0)
+
+
 class StorageUnit:
     field_table = {}
-    static_list = []
-    constant_list = []
+    static_list = {}
+    constant_list = {}
     sub_storageUnit = []
     func_calling_space = 0
-
+    param_offset = 0
     def __repr__(self):
         sub = ""
         for su in self.sub_storageUnit:
@@ -52,6 +64,7 @@ class StorageUnit:
         self.size = 0
         self.func_calling_space = 0
         self.sub_storageUnit = []
+        self.param_offset = 0
         if caller is not None:
             self.static_list = caller.static_list
             self.constant_list = caller.constant_list
@@ -77,6 +90,11 @@ class StorageUnit:
         self.add_size(size)
         self.add_field(field)
 
+    def add_param(self, id, type, size):
+        field = ParamField(id, type, size, self.param_offset)
+        self.param_offset = self.param_offset + size
+        self.add_field(field)
+
     def get(self, id: str) -> Optional[Field]:
         field = None
         try:
@@ -85,17 +103,26 @@ class StorageUnit:
             if self.caller is not None:
                 field = self.caller.get(id)
         if field is None:
+            field = self.static_list[id]
+        if field is None:
             print("Error: Undefined Identifier of " + id)
             self.add_local(id,"int",8)
             field = self.get(id)
         return field
 
     def add_constant(self, id: str, type: str, size: int):
-        field = Field(id, type, size)
-        self.static_list.append(field)
-        self.add_field(field)
+        field = StaticField(id, type, size)
+        self.static_list[id]=field
+        #if self.caller is not None:
+        #    self.caller.add_constant(id,type,size)
 
     def add_static(self, id: str, type: str, size: int):
-        field = Field(id, type, size)
-        self.static_list.append(field)
-        self.add_field(field)
+        field = StaticField(id, type, size)
+        self.static_list[id]=field
+        #self.caller.add_static(id,type,size)
+
+    def get_func_calling_space(self):
+        space = self.func_calling_space
+        for su in self.sub_storageUnit:
+            space = max(space,su.func_calling_space)
+        return space
