@@ -42,6 +42,15 @@ conditional_jmp_table = {
     '<=': 'jle'
 }
 
+relop_table = {
+    '==': 'e',
+    '!=': 'ne',
+    '>': 'jg',
+    '>=': 'jge',
+    '<': 'jl',
+    '<=': 'jle'
+}
+
 
 class BaseNode:
     child_node_list = []
@@ -220,17 +229,22 @@ class CalcNode(Node):
                                                  self.child_node_list[1].asm_val, self.child_node_list[0].asm_val))
                 self.asm_val = self.child_node_list[0].asm_val
             else:
-                if self.optr in ['+', '-', '*']:
+                if self.optr in ['+', '-', '*', '>', '<', '>=', '<=']:
                     register = '%edx'
-                    if self.asm_val!='%eax':
+                    if self.asm_val != '%eax':
                         register = self.asm_val
-                    post.append(
-                        "mov{} {},{}".format(instr_suffix[self.type],
-                                             self.child_node_list[0].asm_val, register))
+                    # post.append(
+                    #    "mov{} {},{}".format(instr_suffix[self.type],
+                    #                         self.child_node_list[0].asm_val, register))
                     post.append(
                         "mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[1].asm_val))
-                    post.append(
-                        "{}{} %edx,%eax".format(instruction_table[self.optr], instr_suffix[self.type]))
+                    if self.optr in ['+', '-', '*']:
+                        post.append(
+                            "{}{} {},%eax".format(instruction_table[self.optr], instr_suffix[self.type],
+                                                  self.child_node_list[0].asm_val))
+                    else:
+                        post.append("cmp{} {},%eax".format(instr_suffix[self.type],self.child_node_list[0].asm_val))
+                        post.append("set{}{} %al".format(relop_table[self.optr],instr_suffix[self.type]))
                 if self.optr in ['/', '%']:
                     if self.child_node_list[0].asm_val != '%eax':
                         post.append("mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
@@ -331,11 +345,11 @@ class FunDefNode(Node):
     def get_targetCode_post(self) -> list:
         post = []
         post.append("{}:".format(self.id))
-        post.append("pushl %ebp")
-        post.append("movl %esp,%ebp")
+        post.append("pushq %rbp")
+        post.append("movq %rsp,%rbp")
         alloc = self.storage_unit.func_calling_space + self.storage_unit.size
         if alloc != 0:
-            post.append("subl ${},%esp".format(alloc))
+            post.append("subq ${},%rsp".format(alloc))
         post.extend(self.targetCode_post)
         self.targetCode_post = post
         return self.targetCode_post
@@ -345,18 +359,28 @@ class LocalDecNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
         self.nodeType = "LocalDec"
-        self.initVal = None
+        self.init_val = None
 
     def set_program(self):
         type_leaf = self.child_node_list[0]
-        id_leaf = self.child_node_list[1]
-        if id_leaf.optr is not None and id_leaf.optr == 'init_assign':
-            self.init_val = id_leaf.child_node_list[1]
-            id_leaf = id_leaf.child_node_list[0]
+        self.type = type_leaf.val
+        self.id_leaf = self.child_node_list[1]
+        if self.id_leaf.optr is not None and self.id_leaf.optr == 'init_assign':
+            self.init_val = self.id_leaf.child_node_list[1]
+            self.id_leaf = self.id_leaf.child_node_list[0]
         if self.optr == 'param_dec':
-            self.storage_unit.add_param(id=id_leaf.val, type=type_leaf.val, size=type_leaf.size)
+            self.storage_unit.add_param(id=self.id_leaf.val, type=type_leaf.val, size=type_leaf.size)
         else:
-            self.storage_unit.add_local(id=id_leaf.val, type=type_leaf.val, size=type_leaf.size)
+            self.storage_unit.add_local(id=self.id_leaf.val, type=type_leaf.val, size=type_leaf.size)
+
+    def get_targetCode_post(self) -> list:
+        post = []
+        if self.init_val is not None:
+            post.append("mov{} {},{}".format(instr_suffix[self.type],
+                                             self.init_val.asm_val,self.storage_unit.get(self.id_leaf.val)))
+        post.extend(self.targetCode_post)
+        self.targetCode_post = post
+        return post
 
 
 class FunDecNode(Node):
@@ -401,11 +425,11 @@ class StmtNode(Node):
             post.append('leave')
             post.append('ret')
         if self.optr == 'print':
-            post.append("movl ${},%edx".format(self.child_node_list[0].size))
+            post.append("movl ${},%edx".format(self.child_node_list[0].field.size))
             post.append("movl {},%ecx".format(self.child_node_list[0].asm_val))
             post.append("movl $1,%ebx")
             post.append("movl $4,%eax")
-            post.append("int 0x80")
+            post.append("int $0x80")
         post.extend(self.fakeCode_post)
         self.fakeCode_post = post
         return self.fakeCode_post
@@ -434,9 +458,9 @@ class FuncCallNode(CalcNode):
         for arg in self.child_node_list[1].child_node_list:
             field = arg.field
             if offset == 0:
-                post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, "(%esp)"))
+                post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, "(%rsp)"))
             else:
-                post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, str(offset) + "(%esp)"))
+                post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, str(offset) + "(%rsp)"))
             offset = field.size
         post.append("{} {}".format("call", self.child_node_list[0].val))
         post.extend(self.targetCode_post)
@@ -516,9 +540,9 @@ class IdLeaf(Leaf):
     def get_targetCode(self) -> list:
         global stack_trace_length
         if type(self.field) == LocalField:
-            self.asm_val = str(-self.field.offset - self.field.size) + "(%ebp)"
+            self.asm_val = str(-self.field.offset - self.field.size) + "(%rbp)"
         elif type(self.field) == ParamField:
-            self.asm_val = str(self.field.offset + stack_trace_length) + "(%ebp)"
+            self.asm_val = str(self.field.offset + stack_trace_length) + "(%rbp)"
         elif type(self.field) == StaticField:
             self.asm_val = self.field.id
         else:

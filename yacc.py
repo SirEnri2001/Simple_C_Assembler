@@ -288,7 +288,7 @@ def p_Exp_Logic(p):
 
 def p_Exp_Relop(p):
     '''Exp : Exp RELOP Exp'''
-    p[0] = RelopCalcNode(p[2], [p[1], p[3]])
+    p[0] = CalcNode(p[2], [p[1], p[3]])
 
 
 def p_Exp_Mem(p):
