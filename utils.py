@@ -389,9 +389,6 @@ class StmtNode(Node):
             if self.child_node_list[0] is not None:
                 post.append('retVal = {}'.format(self.child_node_list[0].val))
             post.append('ret')
-        if self.optr == 'print':
-            post.append("movl ${},%edx".format(self.child_node_list[0].size))
-            post.append("movl $")
         post.extend(self.fakeCode_post)
         self.fakeCode_post = post
         return self.fakeCode_post
@@ -403,6 +400,12 @@ class StmtNode(Node):
                 post.append('movl {},%eax'.format(self.child_node_list[0].asm_val))
             post.append('leave')
             post.append('ret')
+        if self.optr == 'print':
+            post.append("movl ${},%edx".format(self.child_node_list[0].size))
+            post.append("movl {},%ecx".format(self.child_node_list[0].asm_val))
+            post.append("movl $1,%ebx")
+            post.append("movl $4,%eax")
+            post.append("int 0x80")
         post.extend(self.fakeCode_post)
         self.fakeCode_post = post
         return self.fakeCode_post
