@@ -365,7 +365,8 @@ class LocalDecNode(Node):
         type_leaf = self.child_node_list[0]
         self.type = type_leaf.val
         self.id_leaf = self.child_node_list[1]
-        if self.id_leaf.optr is not None and self.id_leaf.optr == 'init_assign':
+        self.id_leaf.type = type_leaf.val
+        if self.id_leaf.optr is not None and self.id_leaf.optr == '=':
             self.init_val = self.id_leaf.child_node_list[1]
             self.id_leaf = self.id_leaf.child_node_list[0]
         if self.optr == 'param_dec':

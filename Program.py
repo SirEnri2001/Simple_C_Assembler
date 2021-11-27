@@ -74,7 +74,7 @@ class StorageUnit:
     def add_field(self, field: Field):
         try:
             if self.field_table[field.id] is not None:
-                print(field.id + " already been declared")
+                print(str(field) + " already been declared")
             else:
                 self.field_table[field.id] = field
         except KeyError:
