@@ -1,3 +1,5 @@
+import traceback
+
 from Program import *
 
 t_seq = 1
@@ -225,7 +227,7 @@ class CalcNode(Node):
         self.type = self.child_node_list[0].type  # Simple implicit type convert
         try:
             if self.optr == '=':
-                post.append("mov{} {},{}".format(instr_suffix[self.child_node_list[0].type],
+                post.append("mov{} {},{}".format(instr_suffix[self.type],
                                                  self.child_node_list[1].asm_val, self.child_node_list[0].asm_val))
                 self.asm_val = self.child_node_list[0].asm_val
             else:
@@ -257,9 +259,8 @@ class CalcNode(Node):
                     post.append("mov{} {},{}".format(instr_suffix[self.child_node_list[0].type],
                                                      temp_res, self.asm_val))
         except KeyError as e:
-            print("Compiler Error: Key Error in Calc\n\toptr: {}, type: {}".format(
-                self.optr, self.child_node_list[0].type
-            ))
+            print("Compiler Error: Key Error in Calc:".format(str(self)))
+            traceback.print_exc()
         post.extend(self.targetCode_post)
         self.targetCode_post = post
         return self.targetCode_post
@@ -279,6 +280,7 @@ class CalcNode(Node):
             print("Compiler Error: Key Error in Calc\n\toptr: {}, type: {}".format(
                 self.optr, self.child_node_list[0].type
             ))
+            traceback.print_exc()
         post.extend(self.fakeCode_post)
         self.fakeCode_post = post
         return self.fakeCode_post
@@ -345,11 +347,11 @@ class FunDefNode(Node):
     def get_targetCode_post(self) -> list:
         post = []
         post.append("{}:".format(self.id))
-        post.append("pushq %rbp")
-        post.append("movq %rsp,%rbp")
+        post.append("pushl %ebp")
+        post.append("movl %esp,%ebp")
         alloc = self.storage_unit.func_calling_space + self.storage_unit.size
         if alloc != 0:
-            post.append("subq ${},%rsp".format(alloc))
+            post.append("subl ${},%esp".format(alloc))
         post.extend(self.targetCode_post)
         self.targetCode_post = post
         return self.targetCode_post
@@ -367,21 +369,14 @@ class LocalDecNode(Node):
         self.id_leaf = self.child_node_list[1]
         self.id_leaf.type = type_leaf.val
         if self.id_leaf.optr is not None and self.id_leaf.optr == '=':
+            self.id_leaf.type = self.type
             self.init_val = self.id_leaf.child_node_list[1]
             self.id_leaf = self.id_leaf.child_node_list[0]
         if self.optr == 'param_dec':
             self.storage_unit.add_param(id=self.id_leaf.val, type=type_leaf.val, size=type_leaf.size)
         else:
             self.storage_unit.add_local(id=self.id_leaf.val, type=type_leaf.val, size=type_leaf.size)
-
-    def get_targetCode_post(self) -> list:
-        post = []
-        if self.init_val is not None:
-            post.append("mov{} {},{}".format(instr_suffix[self.type],
-                                             self.init_val.asm_val,self.storage_unit.get(self.id_leaf.val)))
-        post.extend(self.targetCode_post)
-        self.targetCode_post = post
-        return post
+            self.child_node_list[1].child_node_list[0] = IdLeaf(self.id_leaf.val)
 
 
 class FunDecNode(Node):
@@ -459,9 +454,9 @@ class FuncCallNode(CalcNode):
         for arg in self.child_node_list[1].child_node_list:
             field = arg.field
             if offset == 0:
-                post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, "(%rsp)"))
+                post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, "(%esp)"))
             else:
-                post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, str(offset) + "(%rsp)"))
+                post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, str(offset) + "(%esp)"))
             offset = field.size
         post.append("{} {}".format("call", self.child_node_list[0].val))
         post.extend(self.targetCode_post)
@@ -541,9 +536,9 @@ class IdLeaf(Leaf):
     def get_targetCode(self) -> list:
         global stack_trace_length
         if type(self.field) == LocalField:
-            self.asm_val = str(-self.field.offset - self.field.size) + "(%rbp)"
+            self.asm_val = str(-self.field.offset - self.field.size) + "(%ebp)"
         elif type(self.field) == ParamField:
-            self.asm_val = str(self.field.offset + stack_trace_length) + "(%rbp)"
+            self.asm_val = str(self.field.offset + stack_trace_length) + "(%ebp)"
         elif type(self.field) == StaticField:
             self.asm_val = self.field.id
         else:

@@ -13,34 +13,10 @@
             </LocalDec>
         </FunDef>
         <CompStmt optr='compst'>
-            <LocalDec optr='dec'>
-                <Type val='int'/>
-                <ID val='a'/>
-            </LocalDec>
-            <LocalDec optr='dec'>
-                <Type val='int'/>
-                <ID val='b'/>
-            </LocalDec>
-            <LocalDec optr='dec'>
-                <Type val='int'/>
-                <ID val='c'/>
-            </LocalDec>
-            <LocalDec optr='dec'>
-                <Type val='int'/>
-                <ID val='d'/>
-            </LocalDec>
             <Stmt optr='return'>
                 <Calc optr='+'>
-                    <Calc optr='*'>
-                        <Identifier val='a'/>
-                        <PrefixCalc optr='-'>
-                            <Identifier val='b'/>
-                        </PrefixCalc>
-                    </Calc>
-                    <Calc optr='*'>
-                        <Identifier val='c'/>
-                        <Identifier val='d'/>
-                    </Calc>
+                    <Identifier val='i'/>
+                    <Identifier val='j'/>
                 </Calc>
             </Stmt>
         </CompStmt>
@@ -53,47 +29,37 @@
         <CompStmt optr='compst'>
             <LocalDec optr='dec'>
                 <Type val='int'/>
-                <Generic optr='init_assign'>
+                <Calc optr='='>
                     <ID val='a'/>
                     <NUM val='1'/>
-                </Generic>
+                </Calc>
             </LocalDec>
             <LocalDec optr='dec'>
                 <Type val='int'/>
-                <Generic optr='init_assign'>
+                <Calc optr='='>
                     <ID val='b'/>
                     <NUM val='2'/>
-                </Generic>
+                </Calc>
             </LocalDec>
             <LocalDec optr='dec'>
                 <Type val='int'/>
-                <Generic optr='init_assign'>
+                <Calc optr='='>
                     <ID val='c'/>
                     <NUM val='3'/>
-                </Generic>
-            </LocalDec>
-            <FlowCtrl optr='while'>
-                <Calc optr='<'>
-                    <Identifier val='a'/>
-                    <Identifier val='b'/>
                 </Calc>
-                <CompStmt optr='compst'>
-                    <Calc optr='='>
-                        <Identifier val='c'/>
-                        <Calc optr='+'>
-                            <Identifier val='c'/>
-                            <NUM val='3'/>
-                        </Calc>
-                    </Calc>
-                </CompStmt>
-            </FlowCtrl>
-            <Calc optr='call'>
-                <ID val='func1'/>
-                <Generic optr=''>
-                    <Identifier val='a'/>
-                    <Identifier val='b'/>
-                </Generic>
+            </LocalDec>
+            <Calc optr='='>
+                <Identifier val='c'/>
+                <Calc optr='+'>
+                    <Identifier val='c'/>
+                    <NUM val='3'/>
+                </Calc>
             </Calc>
+            <FuncCall optr='call'>
+                <Identifier val='func1'/>
+                <Identifier val='a'/>
+                <Identifier val='b'/>
+            </FuncCall>
             <Stmt optr='print'>
                 <Identifier val='c'/>
             </Stmt>
