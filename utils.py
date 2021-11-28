@@ -5,6 +5,8 @@ from Program import *
 t_seq = 1
 l_seq = 1
 stack_trace_length = 8
+env = 'x86'
+# env = 'linux'
 
 code_integrate = []
 
@@ -47,10 +49,10 @@ conditional_jmp_table = {
 relop_table = {
     '==': 'e',
     '!=': 'ne',
-    '>': 'jg',
-    '>=': 'jge',
-    '<': 'jl',
-    '<=': 'jle'
+    '>': 'g',
+    '>=': 'ge',
+    '<': 'l',
+    '<=': 'le'
 }
 
 
@@ -124,6 +126,12 @@ class Node(BaseNode):
 
     def get_fakeCode_post(self) -> list:
         return self.fakeCode_post
+
+    def get_targetCode_linux(self) -> list:
+        return self.get_targetCode()
+
+    def get_targetCode_post_linux(self) -> list:
+        return self.get_targetCode_post()
 
     def get_targetCode(self) -> list:
         return self.targetCode
@@ -246,7 +254,8 @@ class CalcNode(Node):
                                                   self.child_node_list[0].asm_val))
                     else:
                         post.append("cmp{} {},%eax".format(instr_suffix[self.type],self.child_node_list[0].asm_val))
-                        post.append("set{}{} %al".format(relop_table[self.optr],instr_suffix[self.type]))
+                        post.append("set{} %al".format(relop_table[self.optr],instr_suffix[self.type]))
+                        post.append("movzbl %al,{}".format(self.asm_val))
                 if self.optr in ['/', '%']:
                     if self.child_node_list[0].asm_val != '%eax':
                         post.append("mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
@@ -413,7 +422,7 @@ class StmtNode(Node):
         self.fakeCode_post = post
         return self.fakeCode_post
 
-    def get_targetCode_post(self) -> list:
+    def get_targetCode_post_linux(self) -> list:
         post = []
         if self.optr == 'return':
             if self.child_node_list[0] is not None and self.child_node_list[0].asm_val != '%eax':
@@ -426,6 +435,21 @@ class StmtNode(Node):
             post.append("movl $1,%ebx")
             post.append("movl $4,%eax")
             post.append("int $0x80")
+        post.extend(self.fakeCode_post)
+        self.fakeCode_post = post
+        return self.fakeCode_post
+
+    def get_targetCode_post(self) -> list:
+        post = []
+        if self.optr == 'return':
+            if self.child_node_list[0] is not None and self.child_node_list[0].asm_val != '%eax':
+                post.append('movl {},%eax'.format(self.child_node_list[0].asm_val))
+            post.append('leave')
+            post.append('ret')
+        if self.optr == 'print':
+            post.append("movb {},%dl".format(self.child_node_list[0].asm_val))
+            post.append("movb $2,%ah")
+            post.append("int $0x21")
         post.extend(self.fakeCode_post)
         self.fakeCode_post = post
         return self.fakeCode_post
@@ -481,6 +505,9 @@ class FlowCtrlNode(StmtNode):
 
     def set_program(self):
         pass
+
+    def get_targetCode(self) -> list:
+        return self.get_fakeCode()
 
     def get_fakeCode(self):
         global l_seq

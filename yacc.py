@@ -330,16 +330,8 @@ s = '''
  * Author : hanxinghua
  *
  */
- int func1(int i,int j){
-    return i+j;
- }
- 
-int main(){
-    int a = 1, b = 2,c=3;
-    c = c + 3;
-    func1(a,b);
-    print(c);
-    return 0;
+int _main(){
+    print(7);
 }
 '''
 node = parser.parse(s)

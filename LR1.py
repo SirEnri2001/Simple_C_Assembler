@@ -13,6 +13,3 @@ class NonTerminateSymbol(Symbol):
 class TerminateSymbol(Symbol):
     def __init__(self, name):
         super(TerminateSymbol, self).__init__(name)
-
-
-class ProductionMethod:
