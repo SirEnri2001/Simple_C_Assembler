@@ -239,7 +239,7 @@ class CalcNode(Node):
                                                  self.child_node_list[1].asm_val, self.child_node_list[0].asm_val))
                 self.asm_val = self.child_node_list[0].asm_val
             else:
-                if self.optr in ['+', '-', '*', '>', '<', '>=', '<=']:
+                if self.optr in ['+', '-', '*', '>', '<', '>=', '<=', '==']:
                     register = '%edx'
                     if self.asm_val != '%eax':
                         register = self.asm_val
@@ -253,22 +253,26 @@ class CalcNode(Node):
                             "{}{} {},%eax".format(instruction_table[self.optr], instr_suffix[self.type],
                                                   self.child_node_list[0].asm_val))
                     else:
-                        post.append("cmp{} {},%eax".format(instr_suffix[self.type],self.child_node_list[0].asm_val))
-                        post.append("set{} %al".format(relop_table[self.optr],instr_suffix[self.type]))
+                        post.append("cmp{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
+                        post.append("set{} %al".format(relop_table[self.optr], instr_suffix[self.type]))
                         post.append("movzbl %al,{}".format(self.asm_val))
                 if self.optr in ['/', '%']:
+                    div_num = self.child_node_list[1].asm_val
                     if self.child_node_list[0].asm_val != '%eax':
                         post.append("mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
-                    post.append('cltd')
-                    post.append('idiv{} {}'.format(instruction_table[self.optr], instr_suffix[self.type],
-                                                   self.child_node_list[1].asm_val))
+                    if self.child_node_list[1].nodeType == 'NUM':
+                        post.append("mov{} {},%edx".format(instr_suffix[self.type], self.child_node_list[1].asm_val))
+                        div_num = '%edx'
+                    else:
+                        post.append('cltd')
+                    post.append('idiv{} {}'.format(instr_suffix[self.type], div_num))
                     if self.optr in ['%']:
                         temp_res = '%edx'
                 if temp_res != self.asm_val:
                     post.append("mov{} {},{}".format(instr_suffix[self.child_node_list[0].type],
                                                      temp_res, self.asm_val))
         except KeyError as e:
-            print("Compiler Error: Key Error in Calc:".format(str(self)))
+            print("Compiler Error: Key Error in Calc: {}".format(str(self)))
             traceback.print_exc()
         post.extend(self.targetCode_post)
         self.targetCode_post = post
@@ -373,19 +377,15 @@ class LocalDecNode(Node):
         self.init_val = None
 
     def set_program(self):
-        type_leaf = self.child_node_list[0]
-        self.type = type_leaf.val
-        self.id_leaf = self.child_node_list[1]
-        self.id_leaf.type = type_leaf.val
-        if self.id_leaf.optr is not None and self.id_leaf.optr == '=':
-            self.id_leaf.type = self.type
-            self.init_val = self.id_leaf.child_node_list[1]
-            self.id_leaf = self.id_leaf.child_node_list[0]
         if self.optr == 'param_dec':
-            self.storage_unit.add_param(id=self.id_leaf.val, type=type_leaf.val, size=type_leaf.size)
+            self.storage_unit.add_param(self.child_node_list[1].val, self.child_node_list[0].val,
+                                        self.child_node_list[0].size)
         else:
-            self.storage_unit.add_local(id=self.id_leaf.val, type=type_leaf.val, size=type_leaf.size)
-            self.child_node_list[1].child_node_list[0] = IdLeaf(self.id_leaf.val)
+            self.storage_unit.add_param(self.child_node_list[1].val, self.child_node_list[0].val,
+                                        self.child_node_list[0].size)
+        if len(self.child_node_list) == 3:
+            self.child_node_list[2].child_node_list.pop(0)
+            self.child_node_list[2].child_node_list.insert(0, IdLeaf(self.child_node_list[1].val))
 
 
 class FunDecNode(Node):
@@ -502,12 +502,43 @@ class FlowCtrlNode(StmtNode):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
         self.nodeType = "FlowCtrl"
+        self.label1 = ''
+        self.label2 = ''
 
     def set_program(self):
-        pass
+        global l_seq
+        self.label1 = "L{}".format(l_seq)
+        self.label2 = "L{}".format(l_seq + 1)
+        l_seq = l_seq + 2
+
+    def get_targetCode_post(self) -> list:
+        post = []
+        if self.optr == 'if':
+            post.append("{}:".format(self.label1))
+        if self.optr == 'if_else':
+            post.append("{}:".format(self.label2))
+        if self.optr == 'while':
+            post.append("jmp {}".format(self.label1))
+            post.append("{}:".format(self.label2))
+        post.extend(self.targetCode_post)
+        self.targetCode_post = post
+        return self.targetCode_post
 
     def get_targetCode(self) -> list:
-        return self.get_fakeCode()
+        global l_seq
+        if self.optr == 'if':
+            self.child_node_list[1].targetCode.append("cmp {},0".format(self.child_node_list[0].asm_val))
+            self.child_node_list[1].targetCode.append("je {}".format(self.label1))
+        if self.optr == 'if_else':
+            self.child_node_list[1].targetCode.append("cmp {},0".format(self.child_node_list[0].asm_val))
+            self.child_node_list[1].targetCode.append("je {}".format(self.label1))
+            self.child_node_list[2].targetCode.append("jmp {}".format(self.label2))
+            self.child_node_list[2].targetCode.append("{}:".format(self.label1))
+        if self.optr == 'while':
+            self.child_node_list[1].targetCode.append("{}:".format(self.label1))
+            self.child_node_list[1].targetCode.append("cmp {},0".format(self.child_node_list[0].asm_val))
+            self.child_node_list[1].targetCode.append("je {}".format(self.label2))
+        return self.targetCode
 
     def get_fakeCode(self):
         global l_seq

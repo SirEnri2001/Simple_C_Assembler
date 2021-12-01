@@ -223,7 +223,7 @@ def p_Dec(p):
     if len(p) == 2:
         p[0] = p[1]
     else:
-        p[0] = CalcNode('=', [p[1], p[3]])
+        p[0] = Node('append',[p[1],CalcNode('=', [p[1], p[3]])])
 
 
 def p_PrefixedExp_Mem(p):
@@ -330,8 +330,16 @@ s = '''
  * Author : hanxinghua
  *
  */
-int _main(){
-    print(7);
+int main(int argc){
+    int a,b = 10;
+    int c = b/2;
+    if(c==5){
+        a = c/b;
+    }
+    else{
+        a=2;
+    }
+    return 0;
 }
 '''
 node = parser.parse(s)
@@ -341,8 +349,9 @@ optimizer.DeleteNone(node)
 optimizer.PromotionNodes(node)
 optimizer.PromotionNodesSpecified(node, ["extdec", "extdec_fun"])
 optimizer.PromotionNodesSpecified(node, ["dec"])
-print(node)
+
 node.start_program(storage_unit)
+print(node)
 for code in node.generate_targetCode():
     if re.match(".*[.:].*",code):
         print(code)

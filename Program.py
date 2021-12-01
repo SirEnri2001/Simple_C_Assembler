@@ -98,16 +98,18 @@ class StorageUnit:
     def get(self, id: str) -> Optional[Field]:
         field = None
         try:
-            field = self.field_table[id]
+            try:
+                field = self.field_table[id]
+            except KeyError:
+                if self.caller is not None:
+                    field = self.caller.get(id)
+            if field is None:
+                field = self.static_list[id]
         except KeyError:
-            if self.caller is not None:
-                field = self.caller.get(id)
-        if field is None:
-            field = self.static_list[id]
-        if field is None:
-            print("Error: Undefined Identifier of " + id)
-            self.add_local(id,"int",8)
-            field = self.get(id)
+            if field is None:
+                print("Error: Undefined Identifier of " + id)
+                self.add_local(id,"int",8)
+                field = self.get(id)
         return field
 
     def add_constant(self, id: str, type: str, size: int):
