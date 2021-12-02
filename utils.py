@@ -196,9 +196,9 @@ class ExtNode(Node):
 
     def get_targetCode(self) -> list:
         if self.optr == 'extdec':
-            self.targetCode.append('.globl ' + self.child_node_list[0].val)
+            self.targetCode.append('.globl _' + self.child_node_list[0].val)
         if self.optr == 'extdef_func':
-            self.targetCode.append('.globl ' + self.child_node_list[0].id)
+            self.targetCode.append('.globl _' + self.child_node_list[0].id)
         return self.targetCode
 
     def get_targetCode_post(self) -> list:
@@ -230,9 +230,56 @@ class CalcNode(Node):
         return self.targetCode
 
     def get_targetCode_post(self) -> list:
+        if self.child_node_list[0].type=='int' or self.child_node_list[1].type=='int':
+            return self.get_targetCode_post_int()
+        return self.get_targetCode_post_float()
+
+    def get_targetCode_post_float(self) -> list:
+        post = []
+        self.asm_val = '#'
+        try:
+            if self.optr == '=':
+                if self.child_node_list[1].asm_val != '#':
+                    post.append('flds {}'.format(self.child_node_list[1].asm_val))
+                post.append('fstps {}'.format(self.child_node_list[0].asm_val))
+                self.asm_val = self.child_node_list[0].asm_val
+            else:
+                if self.optr in ['+', '-', '*', '>', '<', '>=', '<=', '==']:
+                    post.append('flds {}'.format(self.child_node_list[1].asm_val))
+                    post.append('fadds {}'.format(self.child_node_list[0].asm_val))
+                    if self.optr in ['+', '-', '*']:
+                        post.append(
+                            "{}{} {},%eax".format(instruction_table[self.optr], instr_suffix[self.type],
+                                                  self.child_node_list[0].asm_val))
+                    else:
+                        post.append("cmp{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
+                        post.append("set{} %al".format(relop_table[self.optr], instr_suffix[self.type]))
+                        if self.asm_val !='%eax':
+                            post.append("movzbl %al,{}".format(self.asm_val))
+                if self.optr in ['/', '%']:
+                    div_num = self.child_node_list[1].asm_val
+                    if self.child_node_list[0].asm_val != '%eax':
+                        post.append("mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
+                    if self.child_node_list[1].nodeType == 'NUM':
+                        post.append("mov{} {},%ebx".format(instr_suffix[self.type], self.child_node_list[1].asm_val))
+                        div_num = '%ebx'
+                    post.append('cltd')
+                    post.append('idiv{} {}'.format(instr_suffix[self.type], div_num))
+                    if self.optr in ['%']:
+                        temp_res = '%edx'
+                if temp_res != self.asm_val:
+                    post.append("mov{} {},{}".format(instr_suffix[self.child_node_list[0].type],
+                                                     temp_res, self.asm_val))
+        except KeyError as e:
+            print("Compiler Error: Key Error in Calc: {}".format(str(self)))
+            traceback.print_exc()
+        post.extend(self.targetCode_post)
+        self.targetCode_post = post
+        return self.targetCode_post
+
+    def get_targetCode_post_int(self) -> list:
         post = []
         temp_res = '%eax'
-        self.type = self.child_node_list[0].type  # Simple implicit type convert
         try:
             if self.optr == '=':
                 post.append("mov{} {},{}".format(instr_suffix[self.type],
@@ -255,16 +302,16 @@ class CalcNode(Node):
                     else:
                         post.append("cmp{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
                         post.append("set{} %al".format(relop_table[self.optr], instr_suffix[self.type]))
-                        post.append("movzbl %al,{}".format(self.asm_val))
+                        if self.asm_val !='%eax':
+                            post.append("movzbl %al,{}".format(self.asm_val))
                 if self.optr in ['/', '%']:
                     div_num = self.child_node_list[1].asm_val
                     if self.child_node_list[0].asm_val != '%eax':
                         post.append("mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
                     if self.child_node_list[1].nodeType == 'NUM':
-                        post.append("mov{} {},%edx".format(instr_suffix[self.type], self.child_node_list[1].asm_val))
-                        div_num = '%edx'
-                    else:
-                        post.append('cltd')
+                        post.append("mov{} {},%ebx".format(instr_suffix[self.type], self.child_node_list[1].asm_val))
+                        div_num = '%ebx'
+                    post.append('cltd')
                     post.append('idiv{} {}'.format(instr_suffix[self.type], div_num))
                     if self.optr in ['%']:
                         temp_res = '%edx'
@@ -297,14 +344,6 @@ class CalcNode(Node):
         post.extend(self.fakeCode_post)
         self.fakeCode_post = post
         return self.fakeCode_post
-
-
-class RelopCalcNode(CalcNode):
-    pass
-
-
-class LogicNode(CalcNode):
-    pass
 
 
 class PrefixCalcNode(CalcNode):
@@ -359,7 +398,7 @@ class FunDefNode(Node):
 
     def get_targetCode_post(self) -> list:
         post = []
-        post.append("{}:".format(self.id))
+        post.append("_{}:".format(self.id))
         post.append("pushl %ebp")
         post.append("movl %esp,%ebp")
         alloc = self.storage_unit.func_calling_space + self.storage_unit.size
@@ -482,7 +521,7 @@ class FuncCallNode(CalcNode):
             else:
                 post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, str(offset) + "(%esp)"))
             offset = field.size
-        post.append("{} {}".format("call", self.child_node_list[0].val))
+        post.append("{} _{}".format("call", self.child_node_list[0].val))
         post.extend(self.targetCode_post)
         self.targetCode_post = post
         return self.targetCode_post
@@ -527,16 +566,16 @@ class FlowCtrlNode(StmtNode):
     def get_targetCode(self) -> list:
         global l_seq
         if self.optr == 'if':
-            self.child_node_list[1].targetCode.append("cmp {},0".format(self.child_node_list[0].asm_val))
+            self.child_node_list[1].targetCode.append("cmpl $0,{}".format(self.child_node_list[0].asm_val))
             self.child_node_list[1].targetCode.append("je {}".format(self.label1))
         if self.optr == 'if_else':
-            self.child_node_list[1].targetCode.append("cmp {},0".format(self.child_node_list[0].asm_val))
+            self.child_node_list[1].targetCode.append("cmpl $0,{}".format(self.child_node_list[0].asm_val))
             self.child_node_list[1].targetCode.append("je {}".format(self.label1))
             self.child_node_list[2].targetCode.append("jmp {}".format(self.label2))
             self.child_node_list[2].targetCode.append("{}:".format(self.label1))
         if self.optr == 'while':
             self.child_node_list[1].targetCode.append("{}:".format(self.label1))
-            self.child_node_list[1].targetCode.append("cmp {},0".format(self.child_node_list[0].asm_val))
+            self.child_node_list[1].targetCode.append("cmpl $0,{}".format(self.child_node_list[0].asm_val))
             self.child_node_list[1].targetCode.append("je {}".format(self.label2))
         return self.targetCode
 
@@ -545,14 +584,14 @@ class FlowCtrlNode(StmtNode):
         if self.optr == 'if':
             label = "L{}".format(l_seq)
             l_seq = l_seq + 1
-            self.child_node_list[1].fakeCode.append("cmp {},0".format(self.child_node_list[0].val))
+            self.child_node_list[1].fakeCode.append("cmp {},$0".format(self.child_node_list[0].val))
             self.child_node_list[1].fakeCode.append("je {}".format(label))
             self.fakeCode_post.append("{}:".format(label))
         if self.optr == 'if_else':
             label1 = "L{}".format(l_seq)
             label2 = "L{}".format(l_seq + 1)
             l_seq = l_seq + 2
-            self.child_node_list[1].fakeCode.append("cmp {},0".format(self.child_node_list[0].val))
+            self.child_node_list[1].fakeCode.append("cmp {},$0".format(self.child_node_list[0].val))
             self.child_node_list[1].fakeCode.append("je {}".format(label1))
             self.child_node_list[2].fakeCode.append("jmp {}".format(label2))
             self.child_node_list[2].fakeCode.append("{}:".format(label1))
@@ -562,7 +601,7 @@ class FlowCtrlNode(StmtNode):
             label2 = "L{}".format(l_seq + 1)
             l_seq = l_seq + 2
             self.child_node_list[1].fakeCode.append("{}:".format(label1))
-            self.child_node_list[1].fakeCode.append("cmp {},0".format(self.child_node_list[0].val))
+            self.child_node_list[1].fakeCode.append("cmp {},$0".format(self.child_node_list[0].val))
             self.child_node_list[1].fakeCode.append("je {}".format(label2))
             self.fakeCode_post.append("jmp {}".format(label1))
             self.fakeCode_post.append("{}:".format(label2))
