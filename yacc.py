@@ -27,8 +27,12 @@ def p_relop(p):
 
 def p_type(p):
     '''TYPE : INT
-	| FLOAT '''
-    p[0] = TypeLeaf.getType(p[1])
+    | SHORT
+    | CHAR
+    | LONG
+	| FLOAT
+	| DOUBLE'''
+    p[0] = TypeLeaf.getType(p[1],Leaf('none',''))
 
 def p_Program(p):
     '''Program : ExtDefList '''
@@ -47,7 +51,7 @@ def p_ExtDefList(p):
 
 def p_FunHead(p):
     '''FunHead : Specifier FunDec'''
-    p[0] = FunDefNode('funhead_def', [p[1], p[2]])
+    p[0] = FunDefNode(p[1],p[2])
 
 
 def p_ExtDecHead(p):
@@ -55,9 +59,9 @@ def p_ExtDecHead(p):
     p[0] = ExtNode('extdec', [p[1], p[2]])
 
 
-def p_ExtDecHead_Fun(p):
-    '''ExtDecHead : Specifier FunDec'''
-    p[0] = ExtNode('extdec_fun', [p[1], p[2]])
+#def p_ExtDecHead_Fun(p):
+#    '''ExtDecHead : Specifier FunDec'''
+#    p[0] = ExtNode('extdec_fun', [p[1], p[2]])
 
 
 def p_ExtDecList(p):
@@ -69,9 +73,9 @@ def p_ExtDecList(p):
         p[0] = p[1]
 
 
-def p_ExtDecList_Fun(p):
-    '''ExtDecList : ExtDecList ',' FunDec'''
-    p[0] = ExtNode('extdec_fun', [p[1].child_node_list[0], p[1], p[3]])
+#def p_ExtDecList_Fun(p):
+#    '''ExtDecList : ExtDecList ',' FunDec'''
+#    p[0] = ExtNode('extdec_fun', [p[1].child_node_list[0], p[1], p[3]])
 
 
 def p_ExtDef_ExtDecList(p):
@@ -117,12 +121,19 @@ def p_Tag(p):
 
 def p_VarDec(p):
     '''VarDec : ID
-	| VarDec '[' NUMBER ']' '''
+    | '(' VarDec ')'
+	| VarDec '[' NUMBER ']'
+	| FunDec'''
     if len(p) == 2:
-        p[0] = Leaf("ID", p[1])
+        p[0] = Node('append',[Leaf('none',''), Leaf("ID", p[1])])
     elif len(p) == 5:
         p[0] = Node('array_dec', [p[1], Leaf('NUMBER', p[3])])
+    elif len(p) == 4:
+        p[0] = p[2]
 
+def p_VarDec_pointer(p):
+    '''VarDec : '*' VarDec'''
+    p[0] = Node('append',[TypeLeaf.getType('*',p[2].child_node_list[0]),p[2].child_node_list[1]])
 
 def p_FunDec(p):
     '''FunDec : ID '(' VarList ')'
@@ -144,7 +155,7 @@ def p_VarList(p):
 
 def p_ParamDec(p):
     '''ParamDec : Specifier VarDec '''
-    p[0] = LocalDecNode("param_dec", [p[1], p[2]])
+    p[0] = LocalDecNode(type_node=p[1],id_node=p[2])
 
 
 def p_CompSt(p):
@@ -205,7 +216,7 @@ def p_Def(p):
 
 def p_DecHead(p):
     '''DecHead : Specifier Dec'''
-    p[0] = LocalDecNode('dec', [p[1], p[2]])
+    p[0] = LocalDecNode(type_node=p[1], id_node=p[2])
 
 
 def p_DecList(p):
@@ -214,7 +225,7 @@ def p_DecList(p):
     if len(p) == 2:
         p[0] = p[1]
     elif len(p) == 4:
-        p[0] = LocalDecNode('dec', [p[1].child_node_list[0], p[1], p[3]])
+        p[0] = LocalDecNode(type_node=p[1].type_node,id_node=p[3],sub_dec_list=p[1])
 
 
 def p_Dec(p):
@@ -331,8 +342,8 @@ s = '''
  *
  */
 int main(int argc){
-    int a,b = 10;
-    int c = b/2;
+    int a,d,e;
+    int c,b;
     if(c==5){
         a = c/b;
     }
@@ -349,9 +360,8 @@ optimizer.DeleteNone(node)
 optimizer.PromotionNodes(node)
 optimizer.PromotionNodesSpecified(node, ["extdec", "extdec_fun"])
 optimizer.PromotionNodesSpecified(node, ["dec"])
-
-node.start_program(storage_unit)
 print(node)
+node.start_program(storage_unit)
 for code in node.generate_targetCode():
     if re.match(".*[.:].*",code):
         print(code)

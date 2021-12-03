@@ -1,3 +1,4 @@
+import re
 import traceback
 
 from Program import *
@@ -16,12 +17,16 @@ size_table = {
     'int': 4,
     'float': 4,
     'double': 8,
-    'pointer': 16
+    '*': 16
 }
 
 instr_suffix = {
     'int': 'l'
 }
+
+
+int_type_list = ['int','short','char','long']
+float_type_list = ['float','double']
 
 instruction_table = {
     '=': 'mov',
@@ -31,6 +36,13 @@ instruction_table = {
     '/': 'idiv',
     '++': 'inc',
     '--': 'dec'
+}
+
+float_instruction_table = {
+    '+': 'faddp',
+    '-': 'faddp',
+    '*': 'fmulp',
+    '/': 'fdivp'
 }
 
 prefix_instruction_table = {
@@ -181,7 +193,6 @@ class ExtNode(Node):
         if self.optr == 'extdef_func':
             new_su = StorageUnit(self.storage_unit)
             self.storage_unit = new_su
-            self.id_leaf = self.child_node_list[0].id
 
     def set_program_post(self):
         if self.optr == 'extdef_func':
@@ -196,9 +207,9 @@ class ExtNode(Node):
 
     def get_targetCode(self) -> list:
         if self.optr == 'extdec':
-            self.targetCode.append('.globl _' + self.child_node_list[0].val)
+            self.targetCode.append('.globl ' + self.child_node_list[0].val)
         if self.optr == 'extdef_func':
-            self.targetCode.append('.globl _' + self.child_node_list[0].id)
+            self.targetCode.append('.globl _' + self.child_node_list[0].val)
         return self.targetCode
 
     def get_targetCode_post(self) -> list:
@@ -230,46 +241,56 @@ class CalcNode(Node):
         return self.targetCode
 
     def get_targetCode_post(self) -> list:
-        if self.child_node_list[0].type=='int' or self.child_node_list[1].type=='int':
+        if self.child_node_list[0].type in int_type_list and self.child_node_list[1].type in int_type_list:
+            self.type = 'int'
             return self.get_targetCode_post_int()
+        if self.child_node_list[0].type not in int_type_list:
+            self.type = self.child_node_list[0].type
+        else:
+            self.type = self.child_node_list[1].type
+
+        if self.type is None or self.type == '':
+            print("Compiler Error: Type Not Specified")
+            print(self)
         return self.get_targetCode_post_float()
+
+    def load_float(self,node_idx) -> str:
+        if self.child_node_list[node_idx].type in int_type_list:
+            return 'fild{} {}'.format(instr_suffix[self.child_node_list[node_idx].type],
+                                           self.child_node_list[node_idx].asm_val)
+        elif self.child_node_list[node_idx].asm_val != '#':
+            return 'flds {}'.format(self.child_node_list[node_idx].asm_val)
 
     def get_targetCode_post_float(self) -> list:
         post = []
         self.asm_val = '#'
         try:
             if self.optr == '=':
-                if self.child_node_list[1].asm_val != '#':
-                    post.append('flds {}'.format(self.child_node_list[1].asm_val))
-                post.append('fstps {}'.format(self.child_node_list[0].asm_val))
+                post.append(self.load_float(1))
+                if self.child_node_list[0].type in int_type_list:
+                    post.append('fist {}'.format(self.child_node_list[0].asm_val))
+                else:
+                    post.append('fstps {}'.format(self.child_node_list[0].asm_val))
                 self.asm_val = self.child_node_list[0].asm_val
             else:
-                if self.optr in ['+', '-', '*', '>', '<', '>=', '<=', '==']:
-                    post.append('flds {}'.format(self.child_node_list[1].asm_val))
-                    post.append('fadds {}'.format(self.child_node_list[0].asm_val))
+                if self.optr in ['+', '-', '*','/', '>', '<', '>=', '<=', '==']:
                     if self.optr in ['+', '-', '*']:
-                        post.append(
-                            "{}{} {},%eax".format(instruction_table[self.optr], instr_suffix[self.type],
-                                                  self.child_node_list[0].asm_val))
+                        post.append(self.load_float(1))
+                        if self.optr == '-':
+                            post.append("fchs")
+                        post.append(self.load_float(0))
+                        if self.child_node_list[0].asm_val=='#':
+                            post.append("{} %st(1),%st(0)".format(float_instruction_table[self.optr]))
+                        else:
+                            post.append("{} %st(0),%st(1)".format(float_instruction_table[self.optr]))
                     else:
-                        post.append("cmp{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
-                        post.append("set{} %al".format(relop_table[self.optr], instr_suffix[self.type]))
+                        self.asm_val = '%eax'
+                        post.append(self.load_float(1))
+                        post.append(self.load_float(0))
+                        post.append("fcomip %st(0),%st(1)")
+                        post.append("set{} %al".format(relop_table[self.optr]))
                         if self.asm_val !='%eax':
                             post.append("movzbl %al,{}".format(self.asm_val))
-                if self.optr in ['/', '%']:
-                    div_num = self.child_node_list[1].asm_val
-                    if self.child_node_list[0].asm_val != '%eax':
-                        post.append("mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
-                    if self.child_node_list[1].nodeType == 'NUM':
-                        post.append("mov{} {},%ebx".format(instr_suffix[self.type], self.child_node_list[1].asm_val))
-                        div_num = '%ebx'
-                    post.append('cltd')
-                    post.append('idiv{} {}'.format(instr_suffix[self.type], div_num))
-                    if self.optr in ['%']:
-                        temp_res = '%edx'
-                if temp_res != self.asm_val:
-                    post.append("mov{} {},{}".format(instr_suffix[self.child_node_list[0].type],
-                                                     temp_res, self.asm_val))
         except KeyError as e:
             print("Compiler Error: Key Error in Calc: {}".format(str(self)))
             traceback.print_exc()
@@ -287,12 +308,6 @@ class CalcNode(Node):
                 self.asm_val = self.child_node_list[0].asm_val
             else:
                 if self.optr in ['+', '-', '*', '>', '<', '>=', '<=', '==']:
-                    register = '%edx'
-                    if self.asm_val != '%eax':
-                        register = self.asm_val
-                    # post.append(
-                    #    "mov{} {},{}".format(instr_suffix[self.type],
-                    #                         self.child_node_list[0].asm_val, register))
                     post.append(
                         "mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[1].asm_val))
                     if self.optr in ['+', '-', '*']:
@@ -346,6 +361,7 @@ class CalcNode(Node):
         return self.fakeCode_post
 
 
+
 class PrefixCalcNode(CalcNode):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
@@ -381,16 +397,18 @@ class MemNode(Node):
 
 
 class FunDefNode(Node):
-    def __init__(self, optr, sub_node_list: list):
-        super().__init__(optr, sub_node_list)
+    def __init__(self, ret_type_node, fundec):
+        super().__init__('funhead_def', [ret_type_node, fundec])
         self.nodeType = "FunDef"
-        self.retType = None
-        self.id = None
+        self.ret_type_node = ret_type_node
+        self.id_node = fundec
+        self.val = fundec.val
 
     def set_program(self):
-        self.retType = self.child_node_list[0]
-        self.id = self.child_node_list[1].val
-        self.storage_unit.add_static(self.id, self.retType, 0)
+        self.ret_type_node = self.child_node_list[0]
+        self.id_node = self.child_node_list[1]
+        self.val = self.id_node.val
+        self.storage_unit.add_static(self.id_node.val, self.ret_type_node.val, 0)
 
     def get_fakeCode(self):
         self.fakeCode.append("{}:".format(self.child_node_list[1].child_node_list[0].val))
@@ -398,7 +416,7 @@ class FunDefNode(Node):
 
     def get_targetCode_post(self) -> list:
         post = []
-        post.append("_{}:".format(self.id))
+        post.append("_{}:".format(self.val))
         post.append("pushl %ebp")
         post.append("movl %esp,%ebp")
         alloc = self.storage_unit.func_calling_space + self.storage_unit.size
@@ -410,21 +428,31 @@ class FunDefNode(Node):
 
 
 class LocalDecNode(Node):
-    def __init__(self, optr, sub_node_list: list):
-        super().__init__(optr, sub_node_list)
+    def __init__(self, type_node, id_node, is_param = False,sub_dec_list = None):
+        if is_param:
+            super().__init__('param_dec', [])
+        else:
+            super().__init__('dec', [])
+        self.child_node_list = [type_node,id_node]
+        if sub_dec_list is not None:
+            self.child_node_list.append(sub_dec_list)
+
+        self.type_node = type_node
         self.nodeType = "LocalDec"
         self.init_val = None
 
     def set_program(self):
+        self.id_node = self.child_node_list[1]
+        self.type = self.type_node.val
         if self.optr == 'param_dec':
-            self.storage_unit.add_param(self.child_node_list[1].val, self.child_node_list[0].val,
-                                        self.child_node_list[0].size)
+            self.storage_unit.add_param(self.id_node.val, self.type_node.val,
+                                        self.type_node.size)
         else:
-            self.storage_unit.add_param(self.child_node_list[1].val, self.child_node_list[0].val,
-                                        self.child_node_list[0].size)
+            self.storage_unit.add_local(self.id_node.val, self.type_node.val,
+                                        self.type_node.size)
         if len(self.child_node_list) == 3:
             self.child_node_list[2].child_node_list.pop(0)
-            self.child_node_list[2].child_node_list.insert(0, IdLeaf(self.child_node_list[1].val))
+            self.child_node_list[2].child_node_list.insert(0, IdLeaf(self.id_node.val))
 
 
 class FunDecNode(Node):
@@ -646,23 +674,50 @@ class IdLeaf(Leaf):
 
 class TypeLeaf(Leaf):
     size: int
-
-    def __init__(self, val):
+    def __init__(self, val, subtype):
         super().__init__("Type", val)
         global declared_type
         self.size = size_table[val]
+        if subtype.nodeType!='none':
+            self.type_list = subtype.type_list
+            self.type_list.append(val)
+        else:
+            self.type_list = [val]
+        val = ''
+        i = 0
+        while i<len(self.type_list):
+            _type = self.type_list[i]
+            if _type == '*':
+                val = '*'+val
+            elif re.match(r'\[\d*]',_type):
+                if re.match(r'\(.*?\)',_type):
+                    print("Type Error: no such type {}".format(val+_type))
+                elif i>0 and self.type_list[i-1] == '*':
+                    val = "("+val+")"+_type
+                else:
+                    val = val+_type
+            elif re.match(r'\(.*?\)',_type):
+                if i > 0:
+                    val = '('+val+')'+_type
+            else:
+                if i==0:
+                    val = str(_type)
+                else:
+                    val = str(_type) + " " + val
+            i = i+1
+        self.val = val
         declared_type[val] = self
 
     def set_program(self):
         pass
 
     @classmethod
-    def getType(cls, val):
+    def getType(cls, val,subtype = None):
         global declared_type
         try:
             typeObj = declared_type[val]
         except KeyError:
-            typeObj = TypeLeaf(val)
+            typeObj = TypeLeaf(val, subtype)
             declared_type[val] = typeObj
         return typeObj
 
@@ -680,7 +735,7 @@ class TreeOptimizer:
         while not is_clean:
             is_clean = True
             for node in root.child_node_list:
-                if not type(node) == Leaf and node.optr == 'append':
+                if type(node) == Node and node.optr == 'append':
                     is_clean = False
                     for node2 in node.child_node_list:
                         root.child_node_list.append(node2)

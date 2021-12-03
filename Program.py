@@ -24,7 +24,7 @@ class LocalField(Field):
         self.offset = offset
 
     def __repr__(self):
-        return "<LocalField id='" + self.id + "' type='" + self.type + "' address='"+str(self.offset)+"'/>"
+        return "<LocalField id='" + str(self.id) + "' type='" + str(self.type) + "' address='"+str(self.offset)+"'/>"
 
 class ParamField(LocalField):
     def __init__(self, id, type, size, offset):
