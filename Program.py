@@ -9,38 +9,39 @@ class Field:
     size: int
     type: str
 
-    def __init__(self, id, type, size):
+    def __init__(self, id, type_list:list, size):
         self.id = id
         self.size = size
-        self.type = type
+        self.type_list = type_list
+        self.fieldType = "Field"
 
     def __repr__(self):
-        return "<Field id='" + self.id + "' type='" + self.type + "'/>"
+        return "<"+self.fieldType+" id='" + self.id + "' type='" + str(self.type_list) + "'/>"
 
 
 class LocalField(Field):
-    def __init__(self, id, type, size, offset):
-        super().__init__(id, type, size)
+    def __init__(self, id, type_list:list, size, offset):
+        super().__init__(id, type_list, size)
+        self.fieldType='Local'
         self.offset = offset
 
-    def __repr__(self):
-        return "<LocalField id='" + str(self.id) + "' type='" + str(self.type) + "' address='"+str(self.offset)+"'/>"
 
 class ParamField(LocalField):
-    def __init__(self, id, type, size, offset):
-        super().__init__(id, type, size,offset)
+    def __init__(self, id, type_list:list, size, offset):
+        super().__init__(id, type_list, size,offset)
+        self.fieldType='Param'
 
-    def __repr__(self):
-        return "<ParamField id='" + self.id + "' type='" + self.type + "' address='"+str(self.offset)+"'/>"
 
 class StaticField(Field):
-    def __init__(self, id, type, size):
-        super().__init__(id, type, size)
+    def __init__(self, id, type_list:list, size):
+        super().__init__(id, type_list, size)
+        self.fieldType='Param'
 
 
 class FuncField(Field):
-    def __init__(self, id, type):
-        super().__init__(id, type, 0)
+    def __init__(self, id, type_list:list):
+        super().__init__(id, type_list, 0)
+        self.fieldType='Func'
 
 
 class StorageUnit:

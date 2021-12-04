@@ -244,14 +244,17 @@ class CalcNode(Node):
         if self.child_node_list[0].type in int_type_list and self.child_node_list[1].type in int_type_list:
             self.type = 'int'
             return self.get_targetCode_post_int()
+        if not self.child_node_list[0].type or not self.child_node_list[1].type:
+            print("CalcNode Error")
+            print(self.child_node_list)
+            raise ValueError("Calc Error")
         if self.child_node_list[0].type not in int_type_list:
             self.type = self.child_node_list[0].type
         else:
             self.type = self.child_node_list[1].type
-
         if self.type is None or self.type == '':
             print("Compiler Error: Type Not Specified")
-            print(self)
+            raise ValueError("Type not Specified")
         return self.get_targetCode_post_float()
 
     def load_float(self,node_idx) -> str:
@@ -436,12 +439,17 @@ class LocalDecNode(Node):
         self.child_node_list = [type_node,id_node]
         if sub_dec_list is not None:
             self.child_node_list.append(sub_dec_list)
-
-        self.type_node = type_node
         self.nodeType = "LocalDec"
         self.init_val = None
+        self.type_node = self.child_node_list[0]
 
     def set_program(self):
+        i = len(self.child_node_list) - 1
+        if type(self.child_node_list[0])==TypeLeaf and type(self.child_node_list[1])==TypeLeaf:
+            self.child_node_list.insert(0,TypeLeaf.getType(self.child_node_list[0].val,self.child_node_list[1]))
+            self.child_node_list.pop(1)
+            self.child_node_list.pop(1)
+        self.type_node = self.child_node_list[0]
         self.id_node = self.child_node_list[1]
         self.type = self.type_node.val
         if self.optr == 'param_dec':
@@ -647,6 +655,12 @@ class Leaf(Node):
     def __str__(self):
         return "<" + str(self.nodeType) + " val='" + str(self.val) + "'/>"
 
+class ValLeaf(Leaf):
+    def __init__(self, type, val):
+        super().__init__('Val', val)
+        self.type = type
+        if self.type in int_type_list:
+            self.asm_val = '$' + str(self.val)
 
 class IdLeaf(Leaf):
     def __init__(self, val):
@@ -656,7 +670,7 @@ class IdLeaf(Leaf):
 
     def set_program(self):
         self.field = self.storage_unit.get(self.name)
-        self.type = self.field.type
+        self.type = self.field.type_list
 
     def get_targetCode(self) -> list:
         global stack_trace_length
@@ -674,39 +688,46 @@ class IdLeaf(Leaf):
 
 class TypeLeaf(Leaf):
     size: int
+
+    def __str__(self):
+        return "<" + str(self.nodeType) + " list='" + str(self.type_list) + "'/>"
+
+    @classmethod
+    def get_str(cls,type_list:list) -> str:
+        val = ''
+        i = 0
+        while i < len(type_list):
+            _type = type_list[i]
+            if _type == '*':
+                val = '*' + val
+            elif re.match(r'\[\d*]', _type):
+                if re.match(r'\(.*?\)', _type):
+                    print("Type Error: no such type {}".format(val + _type))
+                elif i > 0 and type_list[i - 1] == '*':
+                    val = "(" + val + ")" + _type
+                else:
+                    val = val + _type
+            elif re.match(r'\(.*?\)', _type):
+                if i > 0:
+                    val = '(' + val + ')' + _type
+            else:
+                if i == 0:
+                    val = str(_type)
+                else:
+                    val = str(_type) + " " + val
+            i = i + 1
+        return val
+
     def __init__(self, val, subtype):
         super().__init__("Type", val)
         global declared_type
         self.size = size_table[val]
         if subtype.nodeType!='none':
-            self.type_list = subtype.type_list
+            self.type_list = subtype.type_list.copy()
             self.type_list.append(val)
         else:
             self.type_list = [val]
-        val = ''
-        i = 0
-        while i<len(self.type_list):
-            _type = self.type_list[i]
-            if _type == '*':
-                val = '*'+val
-            elif re.match(r'\[\d*]',_type):
-                if re.match(r'\(.*?\)',_type):
-                    print("Type Error: no such type {}".format(val+_type))
-                elif i>0 and self.type_list[i-1] == '*':
-                    val = "("+val+")"+_type
-                else:
-                    val = val+_type
-            elif re.match(r'\(.*?\)',_type):
-                if i > 0:
-                    val = '('+val+')'+_type
-            else:
-                if i==0:
-                    val = str(_type)
-                else:
-                    val = str(_type) + " " + val
-            i = i+1
-        self.val = val
-        declared_type[val] = self
+        self.val = TypeLeaf.get_str(self.type_list)
 
     def set_program(self):
         pass
@@ -714,11 +735,16 @@ class TypeLeaf(Leaf):
     @classmethod
     def getType(cls, val,subtype = None):
         global declared_type
+        str_list = []
+        if subtype.nodeType!='none':
+            str_list = subtype.type_list.copy()
+        str_list.append(val)
+        str = TypeLeaf.get_str(str_list)
         try:
-            typeObj = declared_type[val]
+            typeObj = declared_type[str]
         except KeyError:
             typeObj = TypeLeaf(val, subtype)
-            declared_type[val] = typeObj
+            declared_type[str] = typeObj
         return typeObj
 
 

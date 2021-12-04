@@ -1,52 +1,59 @@
-<Ext optr='extdef_func'>
-    <FunDef optr='funhead_def'>
-        <Type val='int'/>
-        <ID val='main'/>
-        <LocalDec optr='dec'>
-            <Type val='int'/>
-            <ID val='argc'/>
-        </LocalDec>
-    </FunDef>
-    <CompStmt optr='compst'>
-        <LocalDec optr='dec'>
-            <Type val='int'/>
-            <ID val='a'/>
-        </LocalDec>
-        <LocalDec optr='dec'>
-            <Type val='int'/>
-            <ID val='d'/>
-        </LocalDec>
-        <LocalDec optr='dec'>
-            <Type val='int'/>
-            <ID val='e'/>
-        </LocalDec>
-        <LocalDec optr='dec'>
-            <Type val='int'/>
-            <ID val='c'/>
-        </LocalDec>
-        <FlowCtrl optr='if_else'>
-            <Calc optr='=='>
-                <Identifier val='c'/>
-                <NUM val='5'/>
-            </Calc>
-            <CompStmt optr='compst'>
-                <Calc optr='='>
-                    <Identifier val='a'/>
-                    <Calc optr='/'>
-                        <Identifier val='c'/>
-                        <Identifier val='b'/>
+<Program optr='ExtDefList'>
+    <Ext optr='extdef_func'>
+        <FunDef optr='funhead_def'>
+            <Type list='[' int']'/>
+            <ID val='main'/>
+            <LocalDec optr='dec'>
+                <Type list='[' int']'/>
+                <ID val='argc'/>
+            </LocalDec>
+        </FunDef>
+        <CompStmt optr='compst'>
+            <LocalDec optr='dec'>
+                <Type list='[' int']'/>
+                <LocalDec optr='dec'>
+                    <Type list='[' int']'/>
+                    <LocalDec optr='dec'>
+                        <Type list='[' int']'/>
+                        <Type list='['*', '*', '*', '*', '*']'/>
+                        <ID val='a'/>
+                    </LocalDec>
+                    <ID val='d'/>
+                </LocalDec>
+                <ID val='e'/>
+            </LocalDec>
+            <LocalDec optr='dec'>
+                <Type list='[' int']'/>
+                <LocalDec optr='dec'>
+                    <Type list='[' int']'/>
+                    <ID val='c'/>
+                </LocalDec>
+                <ID val='b'/>
+            </LocalDec>
+            <FlowCtrl optr='if_else'>
+                <Calc optr='=='>
+                    <Identifier val='c'/>
+                    <Val val='5'/>
+                </Calc>
+                <CompStmt optr='compst'>
+                    <Calc optr='='>
+                        <Identifier val='a'/>
+                        <Calc optr='/'>
+                            <Identifier val='c'/>
+                            <Identifier val='b'/>
+                        </Calc>
                     </Calc>
-                </Calc>
-            </CompStmt>
-            <CompStmt optr='compst'>
-                <Calc optr='='>
-                    <Identifier val='a'/>
-                    <NUM val='2'/>
-                </Calc>
-            </CompStmt>
-        </FlowCtrl>
-        <Stmt optr='return'>
-            <NUM val='0'/>
-        </Stmt>
-    </CompStmt>
-</Ext>
+                </CompStmt>
+                <CompStmt optr='compst'>
+                    <Calc optr='='>
+                        <Identifier val='a'/>
+                        <Val val='2'/>
+                    </Calc>
+                </CompStmt>
+            </FlowCtrl>
+            <Stmt optr='return'>
+                <Val val='0'/>
+            </Stmt>
+        </CompStmt>
+    </Ext>
+</Program>

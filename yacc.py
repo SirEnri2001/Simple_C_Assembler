@@ -265,7 +265,7 @@ def p_Exp_Id(p):
 
 def p_Exp_Number(p):
     '''Exp : NUMBER'''
-    p[0] = Leaf('NUM', p[1])
+    p[0] = ValLeaf('int', p[1])
 
 
 def p_Exp_Constant(p):
@@ -342,7 +342,7 @@ s = '''
  *
  */
 int main(int argc){
-    int a,d,e;
+    int ***a,d,*e;
     int c,b;
     if(c==5){
         a = c/b;
@@ -360,8 +360,9 @@ optimizer.DeleteNone(node)
 optimizer.PromotionNodes(node)
 optimizer.PromotionNodesSpecified(node, ["extdec", "extdec_fun"])
 optimizer.PromotionNodesSpecified(node, ["dec"])
-print(node)
 node.start_program(storage_unit)
+
+print(node)
 for code in node.generate_targetCode():
     if re.match(".*[.:].*",code):
         print(code)
