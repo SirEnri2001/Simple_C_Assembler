@@ -5,6 +5,7 @@ from Program import *
 
 t_seq = 1
 l_seq = 1
+lc_seq = 0
 stack_trace_length = 8
 env = 'x86'
 # env = 'linux'
@@ -15,9 +16,12 @@ declared_type = {}
 
 size_table = {
     'int': 4,
+    'short': 2,
+    'char' :1,
+    'long' : 8,
     'float': 4,
     'double': 8,
-    '*': 16
+    '*': 4
 }
 
 instr_suffix = {
@@ -168,14 +172,25 @@ class ProgramNode(Node):
     def __init__(self, optr, sub_node_list: list):
         super().__init__(optr, sub_node_list)
         self.nodeType = "Program"
+        self.constant_dict = {}
 
     def set_program(self):
         pass
 
     def get_fakeCode(self):
-        for node in self.child_node_list:
-            pass
-        return self.fakeCode
+        pass
+
+    def get_targetCode(self) -> list:
+        global lc_seq
+        if len(self.storage_unit.constant_list)==0:
+            self.targetCode.append(".section .text")
+            return self.targetCode
+        self.targetCode.append(".section .data")
+        for const_field_id,const_field in self.storage_unit.constant_list.items():
+            self.targetCode.append("LC"+str(lc_seq)+":")
+            self.targetCode.append("\t."+str(const_field.type_list[0])+" "+str(const_field_id))
+        self.targetCode.append(".section .text")
+        return self.targetCode
 
 
 class ExtNode(Node):
@@ -241,17 +256,17 @@ class CalcNode(Node):
         return self.targetCode
 
     def get_targetCode_post(self) -> list:
-        if self.child_node_list[0].type in int_type_list and self.child_node_list[1].type in int_type_list:
-            self.type = 'int'
+        if self.child_node_list[0].type[0] in int_type_list and self.child_node_list[1].type[0] in int_type_list:
+            self.type = self.child_node_list[0].type.copy()
             return self.get_targetCode_post_int()
         if not self.child_node_list[0].type or not self.child_node_list[1].type:
             print("CalcNode Error")
             print(self.child_node_list)
             raise ValueError("Calc Error")
         if self.child_node_list[0].type not in int_type_list:
-            self.type = self.child_node_list[0].type
+            self.type = self.child_node_list[0].type.copy()
         else:
-            self.type = self.child_node_list[1].type
+            self.type = self.child_node_list[1].type.copy()
         if self.type is None or self.type == '':
             print("Compiler Error: Type Not Specified")
             raise ValueError("Type not Specified")
@@ -383,6 +398,8 @@ class PrefixCalcNode(CalcNode):
         self.type = self.child_node_list[0].type  # Simple implicit type convert
         if self.optr == '-':
             post.append("neg{} {}".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
+        elif self.optr == 'force_convert':
+            self.type = self.child_node_list[0]
         else:
             post.append("{}{} {}".format(instruction_table[self.optr], instr_suffix[self.type], self.asm_val))
         post.extend(self.fakeCode_post)
@@ -655,10 +672,46 @@ class Leaf(Node):
     def __str__(self):
         return "<" + str(self.nodeType) + " val='" + str(self.val) + "'/>"
 
+
+class NoneLeaf(Leaf):
+    inst = None
+
+    def __init__(self):
+        super().__init__('none', None)
+
+    @classmethod
+    def getInstance(cls):
+        if cls.inst is None:
+            cls.inst = NoneLeaf()
+        return cls.inst
+
+
+class LiteralLeaf(Leaf):
+    def __init__(self, type_list, val):
+        super().__init__('Literal', val)
+        self.val = val
+        self.type_list = type_list
+        self.type_str = TypeLeaf.get_str(type_list)
+        if type_list[0] in size_table.keys():
+            self.size = size_table[type_list[0]]
+        #elif type_list == ['*','char']:
+        #    self.size = len(val)-1 - val.count('\\')
+
+    def set_program(self):
+        if self.nodeType == 'NUM':
+            self.asm_val = '$' + str(self.val)
+        elif self.type_str=='const char *':
+            self.storage_unit.add_constant(self.val, ['asciz'], self.size)
+        else:
+            self.storage_unit.add_constant(self.val,self.type_list,self.size)
+
+
+
+
 class ValLeaf(Leaf):
     def __init__(self, type, val):
         super().__init__('Val', val)
-        self.type = type
+        self.type = TypeLeaf.getType(type)
         if self.type in int_type_list:
             self.asm_val = '$' + str(self.val)
 
@@ -721,7 +774,10 @@ class TypeLeaf(Leaf):
     def __init__(self, val, subtype):
         super().__init__("Type", val)
         global declared_type
-        self.size = size_table[val]
+        if re.match(r"\(.*?\)",val):
+            self.size = 0
+        else:
+            self.size = size_table[val]
         if subtype.nodeType!='none':
             self.type_list = subtype.type_list.copy()
             self.type_list.append(val)
@@ -733,7 +789,7 @@ class TypeLeaf(Leaf):
         pass
 
     @classmethod
-    def getType(cls, val,subtype = None):
+    def getType(cls, val,subtype = NoneLeaf.getInstance()):
         global declared_type
         str_list = []
         if subtype.nodeType!='none':
@@ -763,8 +819,10 @@ class TreeOptimizer:
             for node in root.child_node_list:
                 if type(node) == Node and node.optr == 'append':
                     is_clean = False
+                    idx = root.child_node_list.index(node)
                     for node2 in node.child_node_list:
-                        root.child_node_list.append(node2)
+                        root.child_node_list.insert(idx, node2)
+                        idx = idx+1
                     root.child_node_list.remove(node)
         for node in root.child_node_list:
             self.PromotionNodes(node)

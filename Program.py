@@ -1,3 +1,4 @@
+import traceback
 from typing import Optional
 
 addr_offset = 0
@@ -36,6 +37,11 @@ class StaticField(Field):
     def __init__(self, id, type_list:list, size):
         super().__init__(id, type_list, size)
         self.fieldType='Param'
+
+class ConstantField(Field):
+    def __init__(self, id, type_list:list, size):
+        super().__init__(id, type_list, size)
+        self.fieldType='Constant'
 
 
 class FuncField(Field):
@@ -105,19 +111,25 @@ class StorageUnit:
                 if self.caller is not None:
                     field = self.caller.get(id)
             if field is None:
-                field = self.static_list[id]
+                field = self.constant_list[id]
         except KeyError:
             if field is None:
                 print("Error: Undefined Identifier of " + id)
+                traceback.print_exc()
                 self.add_local(id,"int",8)
                 field = self.get(id)
         return field
 
-    def add_constant(self, id: str, type: str, size: int):
-        field = StaticField(id, type, size)
-        self.static_list[id]=field
-        #if self.caller is not None:
-        #    self.caller.add_constant(id,type,size)
+    def add_constant(self, id: str, type_list: list, size: int):
+        try:
+            return self.constant_list[id]
+        except KeyError:
+            field = ConstantField(id, type_list, size)
+            self.constant_list[id]=field
+            if self.caller is not None:
+                self.caller.add_constant(id,type_list,size)
+        return field
+
 
     def add_static(self, id: str, type: str, size: int):
         field = StaticField(id, type, size)

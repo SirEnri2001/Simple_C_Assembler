@@ -7,14 +7,19 @@ from utils import *
 start = 'Program'
 
 precedence = (
+    ('left','('),
+    ('left','['),
+    ('left', '.'),
+    ('right','UPLUS','UMINUS'),
+    ('right','MEM','ADDR'),
     ('left','+','-'),
     ('left','*','/'),
-    ('right','UPLUS','UMINUS')
 )
 
 def p_empty(p):
     '''EMPTY : '''
-    p[0] = Leaf("none", '')
+    p[0] = NoneLeaf.getInstance()
+
 
 def p_relop(p):
     '''RELOP : '>'
@@ -32,7 +37,7 @@ def p_type(p):
     | LONG
 	| FLOAT
 	| DOUBLE'''
-    p[0] = TypeLeaf.getType(p[1],Leaf('none',''))
+    p[0] = TypeLeaf.getType(p[1],NoneLeaf.getInstance())
 
 def p_Program(p):
     '''Program : ExtDefList '''
@@ -125,7 +130,7 @@ def p_VarDec(p):
 	| VarDec '[' NUMBER ']'
 	| FunDec'''
     if len(p) == 2:
-        p[0] = Node('append',[Leaf('none',''), Leaf("ID", p[1])])
+        p[0] = Node('append',[NoneLeaf.getInstance(), Leaf("ID", p[1])])
     elif len(p) == 5:
         p[0] = Node('array_dec', [p[1], Leaf('NUMBER', p[3])])
     elif len(p) == 4:
@@ -238,20 +243,59 @@ def p_Dec(p):
 
 
 def p_PrefixedExp_Mem(p):
-    '''PrefixedExp : '*' Exp
-    | '&' Exp'''
+    '''PrefixedExp : '*' Exp %prec MEM
+    | '&' Exp %prec ADDR '''
     p[0] = MemNode(p[1], [p[2]])
+
+def p_SubTypeSpecifier(p):
+    '''SubTypeSpecifier : EMPTY
+    | '(' SubTypeSpecifier ')' '''
+    if len(p)==2:
+        p[0] = p[1]
+    else:
+        p[0] = p[2]
+
+def p_SubTypeSpecifier_Mem(p):
+    '''SubTypeSpecifier : '*' SubTypeSpecifier
+    | SubTypeSpecifier '[' NUMBER ']' '''
+    if len(p)==3:
+        p[0] = TypeLeaf('*',p[2])
+    else:
+        p[0] = TypeLeaf(p[2:5],p[1])
+
+
+def p_SubTypeSpecifier_function(p):
+    '''SubTypeSpecifier : SubTypeSpecifier '(' TypeList ')'
+    | SubTypeSpecifier '(' ')' '''
+    if len(p)==4:
+        p[0] = TypeLeaf('()',p[1])
+    else:
+        p[0] = TypeLeaf(p[2]+str(p[3])+p[4],p[1])
+
+
+def p_TypeSpecifier(p):
+    '''TypeSpecifier : TYPE SubTypeSpecifier'''
+    p[0] = TypeLeaf(p[1].val,p[2])
+
+
+def p_TypeList(p):
+    '''TypeList : TypeSpecifier
+    | TypeList ',' TypeSpecifier '''
+    if len(p)==2:
+        p[0] = [p[1]]
+    else:
+        p[0] = p[1].append(p[2])
 
 def p_PrefixedExp(p):
     '''PrefixedExp : '-' Exp %prec UMINUS
     	| '+' Exp %prec UPLUS
     	| PLUSSLF Exp
     	| SUBSLF Exp
-    	| '(' TYPE ')' Exp'''
+    	| '(' TypeSpecifier ')' Exp'''
     if len(p) == 3:
         p[0] = PrefixCalcNode(p[1], [p[2]])
     else:
-        p[0] = PrefixCalcNode('force_convert', [p[2]])
+        p[0] = PrefixCalcNode('force_convert', [p[2],p[4]])
 
 
 def p_Exp_par(p):
@@ -268,10 +312,14 @@ def p_Exp_Number(p):
     p[0] = ValLeaf('int', p[1])
 
 
-def p_Exp_Constant(p):
-    '''Exp : DECIMAL
-	| STRINGLITERAL'''
-    node = Leaf('CONST', p[1])
+def p_Exp_Constant_decimal(p):
+    '''Exp : DECIMAL'''
+    node = LiteralLeaf(['double'], p[1])
+    p[0] = node
+
+def p_Exp_Constant_string(p):
+    '''Exp : STRINGLITERAL'''
+    node = LiteralLeaf(['*','char','const'], p[1])
     p[0] = node
 
 
@@ -342,14 +390,8 @@ s = '''
  *
  */
 int main(int argc){
-    int ***a,d,*e;
-    int c,b;
-    if(c==5){
-        a = c/b;
-    }
-    else{
-        a=2;
-    }
+    int a = 10;
+    float f = (float)a;
     return 0;
 }
 '''
@@ -360,9 +402,9 @@ optimizer.DeleteNone(node)
 optimizer.PromotionNodes(node)
 optimizer.PromotionNodesSpecified(node, ["extdec", "extdec_fun"])
 optimizer.PromotionNodesSpecified(node, ["dec"])
-node.start_program(storage_unit)
 
 print(node)
+node.start_program(storage_unit)
 for code in node.generate_targetCode():
     if re.match(".*[.:].*",code):
         print(code)
