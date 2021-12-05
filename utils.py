@@ -261,30 +261,30 @@ class CalcNode(Node):
             return self.get_targetCode_post_int()
         if not self.child_node_list[0].type or not self.child_node_list[1].type:
             print("CalcNode Error")
-            print(self.child_node_list)
             raise ValueError("Calc Error")
         if self.child_node_list[0].type not in int_type_list:
-            self.type = self.child_node_list[0].type.copy()
+            self.type = self.child_node_list[0].type
         else:
-            self.type = self.child_node_list[1].type.copy()
+            self.type = self.child_node_list[1].type
         if self.type is None or self.type == '':
             print("Compiler Error: Type Not Specified")
             raise ValueError("Type not Specified")
         return self.get_targetCode_post_float()
 
-    def load_float(self,node_idx) -> str:
-        if self.child_node_list[node_idx].type in int_type_list:
-            return 'fild{} {}'.format(instr_suffix[self.child_node_list[node_idx].type],
-                                           self.child_node_list[node_idx].asm_val)
-        elif self.child_node_list[node_idx].asm_val != '#':
-            return 'flds {}'.format(self.child_node_list[node_idx].asm_val)
+    @classmethod
+    def load_float(cls,node) -> str:
+        if node.type in int_type_list:
+            return 'fild{} {}'.format(instr_suffix[node.type],
+                                           node.asm_val)
+        elif node.asm_val != '#':
+            return 'flds {}'.format(node.asm_val)
 
     def get_targetCode_post_float(self) -> list:
         post = []
         self.asm_val = '#'
         try:
             if self.optr == '=':
-                post.append(self.load_float(1))
+                post.append(self.load_float(self.child_node_list[1]))
                 if self.child_node_list[0].type in int_type_list:
                     post.append('fist {}'.format(self.child_node_list[0].asm_val))
                 else:
@@ -293,18 +293,18 @@ class CalcNode(Node):
             else:
                 if self.optr in ['+', '-', '*','/', '>', '<', '>=', '<=', '==']:
                     if self.optr in ['+', '-', '*']:
-                        post.append(self.load_float(1))
+                        post.append(self.load_float(self.child_node_list[1]))
                         if self.optr == '-':
                             post.append("fchs")
-                        post.append(self.load_float(0))
+                        post.append(self.load_float(self.child_node_list[0]))
                         if self.child_node_list[0].asm_val=='#':
                             post.append("{} %st(1),%st(0)".format(float_instruction_table[self.optr]))
                         else:
                             post.append("{} %st(0),%st(1)".format(float_instruction_table[self.optr]))
                     else:
                         self.asm_val = '%eax'
-                        post.append(self.load_float(1))
-                        post.append(self.load_float(0))
+                        post.append(self.load_float(self.child_node_list[1]))
+                        post.append(self.load_float(self.child_node_list[0]))
                         post.append("fcomip %st(0),%st(1)")
                         post.append("set{} %al".format(relop_table[self.optr]))
                         if self.asm_val !='%eax':
@@ -321,31 +321,31 @@ class CalcNode(Node):
         temp_res = '%eax'
         try:
             if self.optr == '=':
-                post.append("mov{} {},{}".format(instr_suffix[self.type],
+                post.append("mov{} {},{}".format(instr_suffix[self.type[0]],
                                                  self.child_node_list[1].asm_val, self.child_node_list[0].asm_val))
                 self.asm_val = self.child_node_list[0].asm_val
             else:
                 if self.optr in ['+', '-', '*', '>', '<', '>=', '<=', '==']:
                     post.append(
-                        "mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[1].asm_val))
+                        "mov{} {},%eax".format(instr_suffix[self.type[0]], self.child_node_list[1].asm_val))
                     if self.optr in ['+', '-', '*']:
                         post.append(
-                            "{}{} {},%eax".format(instruction_table[self.optr], instr_suffix[self.type],
+                            "{}{} {},%eax".format(instruction_table[self.optr], instr_suffix[self.type[0]],
                                                   self.child_node_list[0].asm_val))
                     else:
-                        post.append("cmp{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
-                        post.append("set{} %al".format(relop_table[self.optr], instr_suffix[self.type]))
+                        post.append("cmp{} {},%eax".format(instr_suffix[self.type[0]], self.child_node_list[0].asm_val))
+                        post.append("set{} %al".format(relop_table[self.optr], instr_suffix[self.type[0]]))
                         if self.asm_val !='%eax':
                             post.append("movzbl %al,{}".format(self.asm_val))
                 if self.optr in ['/', '%']:
                     div_num = self.child_node_list[1].asm_val
                     if self.child_node_list[0].asm_val != '%eax':
-                        post.append("mov{} {},%eax".format(instr_suffix[self.type], self.child_node_list[0].asm_val))
+                        post.append("mov{} {},%eax".format(instr_suffix[self.type[0]], self.child_node_list[0].asm_val))
                     if self.child_node_list[1].nodeType == 'NUM':
-                        post.append("mov{} {},%ebx".format(instr_suffix[self.type], self.child_node_list[1].asm_val))
+                        post.append("mov{} {},%ebx".format(instr_suffix[self.type[0]], self.child_node_list[1].asm_val))
                         div_num = '%ebx'
                     post.append('cltd')
-                    post.append('idiv{} {}'.format(instr_suffix[self.type], div_num))
+                    post.append('idiv{} {}'.format(instr_suffix[self.type[0]], div_num))
                     if self.optr in ['%']:
                         temp_res = '%edx'
                 if temp_res != self.asm_val:
@@ -428,7 +428,7 @@ class FunDefNode(Node):
         self.ret_type_node = self.child_node_list[0]
         self.id_node = self.child_node_list[1]
         self.val = self.id_node.val
-        self.storage_unit.add_static(self.id_node.val, self.ret_type_node.val, 0)
+        self.storage_unit.add_constant(self.id_node.val, self.ret_type_node.type_list, 4)
 
     def get_fakeCode(self):
         self.fakeCode.append("{}:".format(self.child_node_list[1].child_node_list[0].val))
@@ -468,12 +468,12 @@ class LocalDecNode(Node):
             self.child_node_list.pop(1)
         self.type_node = self.child_node_list[0]
         self.id_node = self.child_node_list[1]
-        self.type = self.type_node.val
+        self.id_node.type = self.child_node_list[0]
         if self.optr == 'param_dec':
-            self.storage_unit.add_param(self.id_node.val, self.type_node.val,
+            self.storage_unit.add_param(self.id_node.val, self.type_node.type_list,
                                         self.type_node.size)
         else:
-            self.storage_unit.add_local(self.id_node.val, self.type_node.val,
+            self.storage_unit.add_local(self.id_node.val, self.type_node.type_list,
                                         self.type_node.size)
         if len(self.child_node_list) == 3:
             self.child_node_list[2].child_node_list.pop(0)
@@ -517,6 +517,8 @@ class StmtNode(Node):
     def get_targetCode_post_linux(self) -> list:
         post = []
         if self.optr == 'return':
+            if self.child_node_list[0].type[0] in float_type_list and self.child_node_list[0].asm_val != '#':
+                CalcNode.load_float(self.child_node_list[0])
             if self.child_node_list[0] is not None and self.child_node_list[0].asm_val != '%eax':
                 post.append('movl {},%eax'.format(self.child_node_list[0].asm_val))
             post.append('leave')
@@ -553,15 +555,13 @@ class FuncCallNode(CalcNode):
         self.nodeType = 'FuncCall'
 
     def set_program(self):
-        pass
+        self.val = self.child_node_list[0].val
+        self.type = self.storage_unit.get(self.val).type_list
 
     def set_program_post(self):
         space = 0
-        args = self.child_node_list[1:]
-        for arg in args:
-            arg.field = self.storage_unit.get(arg.val)
-            space = arg.field.size + space
         self.storage_unit.func_calling_space = max(self.storage_unit.func_calling_space, space)
+
 
     def get_targetCode_post(self) -> list:
         post = []
@@ -570,7 +570,7 @@ class FuncCallNode(CalcNode):
         for arg in self.child_node_list[1].child_node_list:
             field = arg.field
             if offset == 0:
-                post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, "(%esp)"))
+                post.append("mov{} {},{}".format(instr_suffix[field.type_list[0]], arg.asm_val, "(%esp)"))
             else:
                 post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, str(offset) + "(%esp)"))
             offset = field.size
@@ -685,12 +685,16 @@ class NoneLeaf(Leaf):
             cls.inst = NoneLeaf()
         return cls.inst
 
+    def __str__(self):
+        return "<Empty/>"
+
+
 
 class LiteralLeaf(Leaf):
     def __init__(self, type_list, val):
         super().__init__('Literal', val)
         self.val = val
-        self.type_list = type_list
+        self.type = type_list
         self.type_str = TypeLeaf.get_str(type_list)
         if type_list[0] in size_table.keys():
             self.size = size_table[type_list[0]]
@@ -703,7 +707,7 @@ class LiteralLeaf(Leaf):
         elif self.type_str=='const char *':
             self.storage_unit.add_constant(self.val, ['asciz'], self.size)
         else:
-            self.storage_unit.add_constant(self.val,self.type_list,self.size)
+            self.storage_unit.add_constant(self.val,self.type,self.size)
 
 
 
@@ -711,8 +715,9 @@ class LiteralLeaf(Leaf):
 class ValLeaf(Leaf):
     def __init__(self, type, val):
         super().__init__('Val', val)
-        self.type = TypeLeaf.getType(type)
-        if self.type in int_type_list:
+        self.type = TypeLeaf.getTypeList(type)
+        if self.type[0] in int_type_list:
+            self.asm_val = '$' + str(self.val)
             self.asm_val = '$' + str(self.val)
 
 class IdLeaf(Leaf):
@@ -734,7 +739,6 @@ class IdLeaf(Leaf):
         elif type(self.field) == StaticField:
             self.asm_val = self.field.id
         else:
-            print("type {}".format(type(self.field)))
             self.asm_val = "unknown symbol: {}".format(self)
         return self.targetCode
 
@@ -803,11 +807,15 @@ class TypeLeaf(Leaf):
             declared_type[str] = typeObj
         return typeObj
 
+    @classmethod
+    def getTypeList(cls,val,subtype = NoneLeaf.getInstance()):
+        return TypeLeaf.getType(val,subtype).type_list
+
 
 class TreeOptimizer:
     def DeleteNone(self, root: Node):
         for node in root.child_node_list:
-            if type(node) == Leaf and node.nodeType == 'none':
+            if type(node) == NoneLeaf:
                 root.child_node_list.remove(node)
         for node in root.child_node_list:
             self.DeleteNone(node)

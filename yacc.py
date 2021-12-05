@@ -7,13 +7,16 @@ from utils import *
 start = 'Program'
 
 precedence = (
-    ('left','('),
+    ('left','funccall','funccall_arg'),
     ('left','['),
     ('left', '.'),
+    ('right','plusslf','subslf'),
     ('right','UPLUS','UMINUS'),
     ('right','MEM','ADDR'),
     ('left','+','-'),
     ('left','*','/'),
+    ('right','='),
+    ('right',',')
 )
 
 def p_empty(p):
@@ -289,8 +292,8 @@ def p_TypeList(p):
 def p_PrefixedExp(p):
     '''PrefixedExp : '-' Exp %prec UMINUS
     	| '+' Exp %prec UPLUS
-    	| PLUSSLF Exp
-    	| SUBSLF Exp
+    	| PLUSSLF Exp %prec plusslf
+    	| SUBSLF Exp %prec subslf
     	| '(' TypeSpecifier ')' Exp'''
     if len(p) == 3:
         p[0] = PrefixCalcNode(p[1], [p[2]])
@@ -360,8 +363,8 @@ def p_Exp_Mem(p):
 
 
 def p_FuncCall(p):
-    '''FuncCall : ID '(' Args ')'
-	| ID '(' ')' '''
+    '''FuncCall : ID '(' Args ')' %prec funccall_arg
+	| ID '(' ')' %prec funccall'''
     if len(p) == 5:
         p[0] = FuncCallNode('call', [IdLeaf(p[1]), p[3]])
     elif len(p) == 4:
@@ -389,9 +392,18 @@ s = '''
  * Author : hanxinghua
  *
  */
-int main(int argc){
-    int a = 10;
-    float f = (float)a;
+int i_add(int a,int b){
+    return a+b;
+}
+
+float f_add(float a,float b){
+    return a+b;
+}
+
+int main(){
+    int a = 1;
+    float fa = 2.0;
+    f_add(i_add(a,3),fa);
     return 0;
 }
 '''

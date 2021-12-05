@@ -102,7 +102,7 @@ class StorageUnit:
         self.param_offset = self.param_offset + size
         self.add_field(field)
 
-    def get(self, id: str) -> Optional[Field]:
+    def get(self, id: str) -> Field:
         field = None
         try:
             try:
@@ -114,7 +114,7 @@ class StorageUnit:
                 field = self.constant_list[id]
         except KeyError:
             if field is None:
-                print("Error: Undefined Identifier of " + id)
+                print("Error: Undefined Identifier of " + str(id))
                 traceback.print_exc()
                 self.add_local(id,"int",8)
                 field = self.get(id)

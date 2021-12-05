@@ -2937,7 +2937,6 @@ state 112
     (7) RELOP -> . NEQUAL
 
     ;               reduce using rule 73 (PrefixedExp -> + Exp .)
-    =               reduce using rule 73 (PrefixedExp -> + Exp .)
     BOOLAND         reduce using rule 73 (PrefixedExp -> + Exp .)
     BOOLOR          reduce using rule 73 (PrefixedExp -> + Exp .)
     [               reduce using rule 73 (PrefixedExp -> + Exp .)
@@ -2951,16 +2950,17 @@ state 112
     )               reduce using rule 73 (PrefixedExp -> + Exp .)
     ]               reduce using rule 73 (PrefixedExp -> + Exp .)
     ,               reduce using rule 73 (PrefixedExp -> + Exp .)
+    =               shift and go to state 91
     +               shift and go to state 92
     -               shift and go to state 93
     *               shift and go to state 94
     /               shift and go to state 95
 
+  ! =               [ reduce using rule 73 (PrefixedExp -> + Exp .) ]
   ! +               [ reduce using rule 73 (PrefixedExp -> + Exp .) ]
   ! -               [ reduce using rule 73 (PrefixedExp -> + Exp .) ]
   ! *               [ reduce using rule 73 (PrefixedExp -> + Exp .) ]
   ! /               [ reduce using rule 73 (PrefixedExp -> + Exp .) ]
-  ! =               [ shift and go to state 91 ]
   ! BOOLAND         [ shift and go to state 96 ]
   ! BOOLOR          [ shift and go to state 97 ]
   ! [               [ shift and go to state 99 ]
@@ -2995,7 +2995,6 @@ state 113
     (7) RELOP -> . NEQUAL
 
     ;               reduce using rule 72 (PrefixedExp -> - Exp .)
-    =               reduce using rule 72 (PrefixedExp -> - Exp .)
     BOOLAND         reduce using rule 72 (PrefixedExp -> - Exp .)
     BOOLOR          reduce using rule 72 (PrefixedExp -> - Exp .)
     [               reduce using rule 72 (PrefixedExp -> - Exp .)
@@ -3009,16 +3008,17 @@ state 113
     )               reduce using rule 72 (PrefixedExp -> - Exp .)
     ]               reduce using rule 72 (PrefixedExp -> - Exp .)
     ,               reduce using rule 72 (PrefixedExp -> - Exp .)
+    =               shift and go to state 91
     +               shift and go to state 92
     -               shift and go to state 93
     *               shift and go to state 94
     /               shift and go to state 95
 
+  ! =               [ reduce using rule 72 (PrefixedExp -> - Exp .) ]
   ! +               [ reduce using rule 72 (PrefixedExp -> - Exp .) ]
   ! -               [ reduce using rule 72 (PrefixedExp -> - Exp .) ]
   ! *               [ reduce using rule 72 (PrefixedExp -> - Exp .) ]
   ! /               [ reduce using rule 72 (PrefixedExp -> - Exp .) ]
-  ! =               [ shift and go to state 91 ]
   ! BOOLAND         [ shift and go to state 96 ]
   ! BOOLOR          [ shift and go to state 97 ]
   ! [               [ shift and go to state 99 ]
@@ -3053,7 +3053,6 @@ state 114
     (7) RELOP -> . NEQUAL
 
     ;               reduce using rule 61 (PrefixedExp -> * Exp .)
-    =               reduce using rule 61 (PrefixedExp -> * Exp .)
     BOOLAND         reduce using rule 61 (PrefixedExp -> * Exp .)
     BOOLOR          reduce using rule 61 (PrefixedExp -> * Exp .)
     [               reduce using rule 61 (PrefixedExp -> * Exp .)
@@ -3067,16 +3066,17 @@ state 114
     )               reduce using rule 61 (PrefixedExp -> * Exp .)
     ]               reduce using rule 61 (PrefixedExp -> * Exp .)
     ,               reduce using rule 61 (PrefixedExp -> * Exp .)
+    =               shift and go to state 91
     +               shift and go to state 92
     -               shift and go to state 93
     *               shift and go to state 94
     /               shift and go to state 95
 
+  ! =               [ reduce using rule 61 (PrefixedExp -> * Exp .) ]
   ! +               [ reduce using rule 61 (PrefixedExp -> * Exp .) ]
   ! -               [ reduce using rule 61 (PrefixedExp -> * Exp .) ]
   ! *               [ reduce using rule 61 (PrefixedExp -> * Exp .) ]
   ! /               [ reduce using rule 61 (PrefixedExp -> * Exp .) ]
-  ! =               [ shift and go to state 91 ]
   ! BOOLAND         [ shift and go to state 96 ]
   ! BOOLOR          [ shift and go to state 97 ]
   ! [               [ shift and go to state 99 ]
@@ -3281,7 +3281,6 @@ state 118
     (7) RELOP -> . NEQUAL
 
     ;               reduce using rule 62 (PrefixedExp -> & Exp .)
-    =               reduce using rule 62 (PrefixedExp -> & Exp .)
     BOOLAND         reduce using rule 62 (PrefixedExp -> & Exp .)
     BOOLOR          reduce using rule 62 (PrefixedExp -> & Exp .)
     [               reduce using rule 62 (PrefixedExp -> & Exp .)
@@ -3295,16 +3294,17 @@ state 118
     )               reduce using rule 62 (PrefixedExp -> & Exp .)
     ]               reduce using rule 62 (PrefixedExp -> & Exp .)
     ,               reduce using rule 62 (PrefixedExp -> & Exp .)
+    =               shift and go to state 91
     +               shift and go to state 92
     -               shift and go to state 93
     *               shift and go to state 94
     /               shift and go to state 95
 
+  ! =               [ reduce using rule 62 (PrefixedExp -> & Exp .) ]
   ! +               [ reduce using rule 62 (PrefixedExp -> & Exp .) ]
   ! -               [ reduce using rule 62 (PrefixedExp -> & Exp .) ]
   ! *               [ reduce using rule 62 (PrefixedExp -> & Exp .) ]
   ! /               [ reduce using rule 62 (PrefixedExp -> & Exp .) ]
-  ! =               [ shift and go to state 91 ]
   ! BOOLAND         [ shift and go to state 96 ]
   ! BOOLOR          [ shift and go to state 97 ]
   ! [               [ shift and go to state 99 ]
@@ -3338,22 +3338,17 @@ state 119
     (6) RELOP -> . EQUAL
     (7) RELOP -> . NEQUAL
 
-  ! shift/reduce conflict for = resolved as shift
-  ! shift/reduce conflict for + resolved as shift
-  ! shift/reduce conflict for - resolved as shift
-  ! shift/reduce conflict for * resolved as shift
-  ! shift/reduce conflict for / resolved as shift
-  ! shift/reduce conflict for BOOLAND resolved as shift
-  ! shift/reduce conflict for BOOLOR resolved as shift
-  ! shift/reduce conflict for [ resolved as shift
-  ! shift/reduce conflict for . resolved as shift
-  ! shift/reduce conflict for > resolved as shift
-  ! shift/reduce conflict for < resolved as shift
-  ! shift/reduce conflict for GRTREQL resolved as shift
-  ! shift/reduce conflict for LESSEQL resolved as shift
-  ! shift/reduce conflict for EQUAL resolved as shift
-  ! shift/reduce conflict for NEQUAL resolved as shift
     ;               reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
+    BOOLAND         reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
+    BOOLOR          reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
+    [               reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
+    .               reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
+    >               reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
+    <               reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
+    GRTREQL         reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
+    LESSEQL         reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
+    EQUAL           reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
+    NEQUAL          reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
     )               reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
     ]               reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
     ,               reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .)
@@ -3362,32 +3357,22 @@ state 119
     -               shift and go to state 93
     *               shift and go to state 94
     /               shift and go to state 95
-    BOOLAND         shift and go to state 96
-    BOOLOR          shift and go to state 97
-    [               shift and go to state 99
-    .               shift and go to state 100
-    >               shift and go to state 101
-    <               shift and go to state 102
-    GRTREQL         shift and go to state 103
-    LESSEQL         shift and go to state 104
-    EQUAL           shift and go to state 105
-    NEQUAL          shift and go to state 106
 
   ! =               [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
   ! +               [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
   ! -               [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
   ! *               [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
   ! /               [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
-  ! BOOLAND         [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
-  ! BOOLOR          [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
-  ! [               [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
-  ! .               [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
-  ! >               [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
-  ! <               [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
-  ! GRTREQL         [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
-  ! LESSEQL         [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
-  ! EQUAL           [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
-  ! NEQUAL          [ reduce using rule 74 (PrefixedExp -> PLUSSLF Exp .) ]
+  ! BOOLAND         [ shift and go to state 96 ]
+  ! BOOLOR          [ shift and go to state 97 ]
+  ! [               [ shift and go to state 99 ]
+  ! .               [ shift and go to state 100 ]
+  ! >               [ shift and go to state 101 ]
+  ! <               [ shift and go to state 102 ]
+  ! GRTREQL         [ shift and go to state 103 ]
+  ! LESSEQL         [ shift and go to state 104 ]
+  ! EQUAL           [ shift and go to state 105 ]
+  ! NEQUAL          [ shift and go to state 106 ]
 
     RELOP                          shift and go to state 98
 
@@ -3411,22 +3396,17 @@ state 120
     (6) RELOP -> . EQUAL
     (7) RELOP -> . NEQUAL
 
-  ! shift/reduce conflict for = resolved as shift
-  ! shift/reduce conflict for + resolved as shift
-  ! shift/reduce conflict for - resolved as shift
-  ! shift/reduce conflict for * resolved as shift
-  ! shift/reduce conflict for / resolved as shift
-  ! shift/reduce conflict for BOOLAND resolved as shift
-  ! shift/reduce conflict for BOOLOR resolved as shift
-  ! shift/reduce conflict for [ resolved as shift
-  ! shift/reduce conflict for . resolved as shift
-  ! shift/reduce conflict for > resolved as shift
-  ! shift/reduce conflict for < resolved as shift
-  ! shift/reduce conflict for GRTREQL resolved as shift
-  ! shift/reduce conflict for LESSEQL resolved as shift
-  ! shift/reduce conflict for EQUAL resolved as shift
-  ! shift/reduce conflict for NEQUAL resolved as shift
     ;               reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
+    BOOLAND         reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
+    BOOLOR          reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
+    [               reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
+    .               reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
+    >               reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
+    <               reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
+    GRTREQL         reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
+    LESSEQL         reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
+    EQUAL           reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
+    NEQUAL          reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
     )               reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
     ]               reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
     ,               reduce using rule 75 (PrefixedExp -> SUBSLF Exp .)
@@ -3435,32 +3415,22 @@ state 120
     -               shift and go to state 93
     *               shift and go to state 94
     /               shift and go to state 95
-    BOOLAND         shift and go to state 96
-    BOOLOR          shift and go to state 97
-    [               shift and go to state 99
-    .               shift and go to state 100
-    >               shift and go to state 101
-    <               shift and go to state 102
-    GRTREQL         shift and go to state 103
-    LESSEQL         shift and go to state 104
-    EQUAL           shift and go to state 105
-    NEQUAL          shift and go to state 106
 
   ! =               [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
   ! +               [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
   ! -               [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
   ! *               [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
   ! /               [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
-  ! BOOLAND         [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
-  ! BOOLOR          [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
-  ! [               [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
-  ! .               [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
-  ! >               [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
-  ! <               [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
-  ! GRTREQL         [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
-  ! LESSEQL         [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
-  ! EQUAL           [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
-  ! NEQUAL          [ reduce using rule 75 (PrefixedExp -> SUBSLF Exp .) ]
+  ! BOOLAND         [ shift and go to state 96 ]
+  ! BOOLOR          [ shift and go to state 97 ]
+  ! [               [ shift and go to state 99 ]
+  ! .               [ shift and go to state 100 ]
+  ! >               [ shift and go to state 101 ]
+  ! <               [ shift and go to state 102 ]
+  ! GRTREQL         [ shift and go to state 103 ]
+  ! LESSEQL         [ shift and go to state 104 ]
+  ! EQUAL           [ shift and go to state 105 ]
+  ! NEQUAL          [ shift and go to state 106 ]
 
     RELOP                          shift and go to state 98
 
@@ -3608,56 +3578,41 @@ state 127
     (6) RELOP -> . EQUAL
     (7) RELOP -> . NEQUAL
 
-  ! shift/reduce conflict for = resolved as shift
-  ! shift/reduce conflict for + resolved as shift
-  ! shift/reduce conflict for - resolved as shift
-  ! shift/reduce conflict for * resolved as shift
-  ! shift/reduce conflict for / resolved as shift
-  ! shift/reduce conflict for BOOLAND resolved as shift
-  ! shift/reduce conflict for BOOLOR resolved as shift
-  ! shift/reduce conflict for [ resolved as shift
-  ! shift/reduce conflict for . resolved as shift
-  ! shift/reduce conflict for > resolved as shift
-  ! shift/reduce conflict for < resolved as shift
-  ! shift/reduce conflict for GRTREQL resolved as shift
-  ! shift/reduce conflict for LESSEQL resolved as shift
-  ! shift/reduce conflict for EQUAL resolved as shift
-  ! shift/reduce conflict for NEQUAL resolved as shift
     ;               reduce using rule 82 (Exp -> Exp = Exp .)
+    +               reduce using rule 82 (Exp -> Exp = Exp .)
+    -               reduce using rule 82 (Exp -> Exp = Exp .)
+    *               reduce using rule 82 (Exp -> Exp = Exp .)
+    /               reduce using rule 82 (Exp -> Exp = Exp .)
+    BOOLAND         reduce using rule 82 (Exp -> Exp = Exp .)
+    BOOLOR          reduce using rule 82 (Exp -> Exp = Exp .)
+    [               reduce using rule 82 (Exp -> Exp = Exp .)
+    .               reduce using rule 82 (Exp -> Exp = Exp .)
+    >               reduce using rule 82 (Exp -> Exp = Exp .)
+    <               reduce using rule 82 (Exp -> Exp = Exp .)
+    GRTREQL         reduce using rule 82 (Exp -> Exp = Exp .)
+    LESSEQL         reduce using rule 82 (Exp -> Exp = Exp .)
+    EQUAL           reduce using rule 82 (Exp -> Exp = Exp .)
+    NEQUAL          reduce using rule 82 (Exp -> Exp = Exp .)
     )               reduce using rule 82 (Exp -> Exp = Exp .)
     ]               reduce using rule 82 (Exp -> Exp = Exp .)
     ,               reduce using rule 82 (Exp -> Exp = Exp .)
     =               shift and go to state 91
-    +               shift and go to state 92
-    -               shift and go to state 93
-    *               shift and go to state 94
-    /               shift and go to state 95
-    BOOLAND         shift and go to state 96
-    BOOLOR          shift and go to state 97
-    [               shift and go to state 99
-    .               shift and go to state 100
-    >               shift and go to state 101
-    <               shift and go to state 102
-    GRTREQL         shift and go to state 103
-    LESSEQL         shift and go to state 104
-    EQUAL           shift and go to state 105
-    NEQUAL          shift and go to state 106
 
   ! =               [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! +               [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! -               [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! *               [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! /               [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! BOOLAND         [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! BOOLOR          [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! [               [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! .               [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! >               [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! <               [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! GRTREQL         [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! LESSEQL         [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! EQUAL           [ reduce using rule 82 (Exp -> Exp = Exp .) ]
-  ! NEQUAL          [ reduce using rule 82 (Exp -> Exp = Exp .) ]
+  ! +               [ shift and go to state 92 ]
+  ! -               [ shift and go to state 93 ]
+  ! *               [ shift and go to state 94 ]
+  ! /               [ shift and go to state 95 ]
+  ! BOOLAND         [ shift and go to state 96 ]
+  ! BOOLOR          [ shift and go to state 97 ]
+  ! [               [ shift and go to state 99 ]
+  ! .               [ shift and go to state 100 ]
+  ! >               [ shift and go to state 101 ]
+  ! <               [ shift and go to state 102 ]
+  ! GRTREQL         [ shift and go to state 103 ]
+  ! LESSEQL         [ shift and go to state 104 ]
+  ! EQUAL           [ shift and go to state 105 ]
+  ! NEQUAL          [ shift and go to state 106 ]
 
     RELOP                          shift and go to state 98
 
@@ -3682,7 +3637,6 @@ state 128
     (7) RELOP -> . NEQUAL
 
     ;               reduce using rule 83 (Exp -> Exp + Exp .)
-    =               reduce using rule 83 (Exp -> Exp + Exp .)
     +               reduce using rule 83 (Exp -> Exp + Exp .)
     -               reduce using rule 83 (Exp -> Exp + Exp .)
     BOOLAND         reduce using rule 83 (Exp -> Exp + Exp .)
@@ -3698,12 +3652,13 @@ state 128
     )               reduce using rule 83 (Exp -> Exp + Exp .)
     ]               reduce using rule 83 (Exp -> Exp + Exp .)
     ,               reduce using rule 83 (Exp -> Exp + Exp .)
+    =               shift and go to state 91
     *               shift and go to state 94
     /               shift and go to state 95
 
+  ! =               [ reduce using rule 83 (Exp -> Exp + Exp .) ]
   ! *               [ reduce using rule 83 (Exp -> Exp + Exp .) ]
   ! /               [ reduce using rule 83 (Exp -> Exp + Exp .) ]
-  ! =               [ shift and go to state 91 ]
   ! +               [ shift and go to state 92 ]
   ! -               [ shift and go to state 93 ]
   ! BOOLAND         [ shift and go to state 96 ]
@@ -3740,7 +3695,6 @@ state 129
     (7) RELOP -> . NEQUAL
 
     ;               reduce using rule 84 (Exp -> Exp - Exp .)
-    =               reduce using rule 84 (Exp -> Exp - Exp .)
     +               reduce using rule 84 (Exp -> Exp - Exp .)
     -               reduce using rule 84 (Exp -> Exp - Exp .)
     BOOLAND         reduce using rule 84 (Exp -> Exp - Exp .)
@@ -3756,12 +3710,13 @@ state 129
     )               reduce using rule 84 (Exp -> Exp - Exp .)
     ]               reduce using rule 84 (Exp -> Exp - Exp .)
     ,               reduce using rule 84 (Exp -> Exp - Exp .)
+    =               shift and go to state 91
     *               shift and go to state 94
     /               shift and go to state 95
 
+  ! =               [ reduce using rule 84 (Exp -> Exp - Exp .) ]
   ! *               [ reduce using rule 84 (Exp -> Exp - Exp .) ]
   ! /               [ reduce using rule 84 (Exp -> Exp - Exp .) ]
-  ! =               [ shift and go to state 91 ]
   ! +               [ shift and go to state 92 ]
   ! -               [ shift and go to state 93 ]
   ! BOOLAND         [ shift and go to state 96 ]
@@ -3798,7 +3753,6 @@ state 130
     (7) RELOP -> . NEQUAL
 
     ;               reduce using rule 85 (Exp -> Exp * Exp .)
-    =               reduce using rule 85 (Exp -> Exp * Exp .)
     +               reduce using rule 85 (Exp -> Exp * Exp .)
     -               reduce using rule 85 (Exp -> Exp * Exp .)
     *               reduce using rule 85 (Exp -> Exp * Exp .)
@@ -3816,8 +3770,9 @@ state 130
     )               reduce using rule 85 (Exp -> Exp * Exp .)
     ]               reduce using rule 85 (Exp -> Exp * Exp .)
     ,               reduce using rule 85 (Exp -> Exp * Exp .)
+    =               shift and go to state 91
 
-  ! =               [ shift and go to state 91 ]
+  ! =               [ reduce using rule 85 (Exp -> Exp * Exp .) ]
   ! +               [ shift and go to state 92 ]
   ! -               [ shift and go to state 93 ]
   ! *               [ shift and go to state 94 ]
@@ -3856,7 +3811,6 @@ state 131
     (7) RELOP -> . NEQUAL
 
     ;               reduce using rule 86 (Exp -> Exp / Exp .)
-    =               reduce using rule 86 (Exp -> Exp / Exp .)
     +               reduce using rule 86 (Exp -> Exp / Exp .)
     -               reduce using rule 86 (Exp -> Exp / Exp .)
     *               reduce using rule 86 (Exp -> Exp / Exp .)
@@ -3874,8 +3828,9 @@ state 131
     )               reduce using rule 86 (Exp -> Exp / Exp .)
     ]               reduce using rule 86 (Exp -> Exp / Exp .)
     ,               reduce using rule 86 (Exp -> Exp / Exp .)
+    =               shift and go to state 91
 
-  ! =               [ shift and go to state 91 ]
+  ! =               [ reduce using rule 86 (Exp -> Exp / Exp .) ]
   ! +               [ shift and go to state 92 ]
   ! -               [ shift and go to state 93 ]
   ! *               [ shift and go to state 94 ]
@@ -5218,51 +5173,6 @@ WARNING: shift/reduce conflict for GRTREQL in state 115 resolved as shift
 WARNING: shift/reduce conflict for LESSEQL in state 115 resolved as shift
 WARNING: shift/reduce conflict for EQUAL in state 115 resolved as shift
 WARNING: shift/reduce conflict for NEQUAL in state 115 resolved as shift
-WARNING: shift/reduce conflict for = in state 119 resolved as shift
-WARNING: shift/reduce conflict for + in state 119 resolved as shift
-WARNING: shift/reduce conflict for - in state 119 resolved as shift
-WARNING: shift/reduce conflict for * in state 119 resolved as shift
-WARNING: shift/reduce conflict for / in state 119 resolved as shift
-WARNING: shift/reduce conflict for BOOLAND in state 119 resolved as shift
-WARNING: shift/reduce conflict for BOOLOR in state 119 resolved as shift
-WARNING: shift/reduce conflict for [ in state 119 resolved as shift
-WARNING: shift/reduce conflict for . in state 119 resolved as shift
-WARNING: shift/reduce conflict for > in state 119 resolved as shift
-WARNING: shift/reduce conflict for < in state 119 resolved as shift
-WARNING: shift/reduce conflict for GRTREQL in state 119 resolved as shift
-WARNING: shift/reduce conflict for LESSEQL in state 119 resolved as shift
-WARNING: shift/reduce conflict for EQUAL in state 119 resolved as shift
-WARNING: shift/reduce conflict for NEQUAL in state 119 resolved as shift
-WARNING: shift/reduce conflict for = in state 120 resolved as shift
-WARNING: shift/reduce conflict for + in state 120 resolved as shift
-WARNING: shift/reduce conflict for - in state 120 resolved as shift
-WARNING: shift/reduce conflict for * in state 120 resolved as shift
-WARNING: shift/reduce conflict for / in state 120 resolved as shift
-WARNING: shift/reduce conflict for BOOLAND in state 120 resolved as shift
-WARNING: shift/reduce conflict for BOOLOR in state 120 resolved as shift
-WARNING: shift/reduce conflict for [ in state 120 resolved as shift
-WARNING: shift/reduce conflict for . in state 120 resolved as shift
-WARNING: shift/reduce conflict for > in state 120 resolved as shift
-WARNING: shift/reduce conflict for < in state 120 resolved as shift
-WARNING: shift/reduce conflict for GRTREQL in state 120 resolved as shift
-WARNING: shift/reduce conflict for LESSEQL in state 120 resolved as shift
-WARNING: shift/reduce conflict for EQUAL in state 120 resolved as shift
-WARNING: shift/reduce conflict for NEQUAL in state 120 resolved as shift
-WARNING: shift/reduce conflict for = in state 127 resolved as shift
-WARNING: shift/reduce conflict for + in state 127 resolved as shift
-WARNING: shift/reduce conflict for - in state 127 resolved as shift
-WARNING: shift/reduce conflict for * in state 127 resolved as shift
-WARNING: shift/reduce conflict for / in state 127 resolved as shift
-WARNING: shift/reduce conflict for BOOLAND in state 127 resolved as shift
-WARNING: shift/reduce conflict for BOOLOR in state 127 resolved as shift
-WARNING: shift/reduce conflict for [ in state 127 resolved as shift
-WARNING: shift/reduce conflict for . in state 127 resolved as shift
-WARNING: shift/reduce conflict for > in state 127 resolved as shift
-WARNING: shift/reduce conflict for < in state 127 resolved as shift
-WARNING: shift/reduce conflict for GRTREQL in state 127 resolved as shift
-WARNING: shift/reduce conflict for LESSEQL in state 127 resolved as shift
-WARNING: shift/reduce conflict for EQUAL in state 127 resolved as shift
-WARNING: shift/reduce conflict for NEQUAL in state 127 resolved as shift
 WARNING: shift/reduce conflict for = in state 132 resolved as shift
 WARNING: shift/reduce conflict for + in state 132 resolved as shift
 WARNING: shift/reduce conflict for - in state 132 resolved as shift
