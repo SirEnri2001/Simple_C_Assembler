@@ -42,6 +42,7 @@ def p_type(p):
 	| DOUBLE'''
     p[0] = TypeLeaf.getType(p[1],NoneLeaf.getInstance())
 
+
 def p_Program(p):
     '''Program : ExtDefList '''
     print("Compiler Start")
@@ -65,11 +66,6 @@ def p_FunHead(p):
 def p_ExtDecHead(p):
     '''ExtDecHead : Specifier VarDec'''
     p[0] = ExtNode('extdec', [p[1], p[2]])
-
-
-#def p_ExtDecHead_Fun(p):
-#    '''ExtDecHead : Specifier FunDec'''
-#    p[0] = ExtNode('extdec_fun', [p[1], p[2]])
 
 
 def p_ExtDecList(p):
@@ -163,7 +159,7 @@ def p_VarList(p):
 
 def p_ParamDec(p):
     '''ParamDec : Specifier VarDec '''
-    p[0] = LocalDecNode(type_node=p[1],id_node=p[2])
+    p[0] = LocalDecNode(type_node=p[1],id_node=p[2],is_param=True)
 
 
 def p_CompSt(p):
@@ -317,12 +313,12 @@ def p_Exp_Number(p):
 
 def p_Exp_Constant_decimal(p):
     '''Exp : DECIMAL'''
-    node = LiteralLeaf(['double'], p[1])
+    node = LiteralLeaf(['float'], p[1])
     p[0] = node
 
 def p_Exp_Constant_string(p):
     '''Exp : STRINGLITERAL'''
-    node = LiteralLeaf(['*','char','const'], p[1])
+    node = LiteralLeaf(['*','char'], p[1])
     p[0] = node
 
 
@@ -401,9 +397,9 @@ float f_add(float a,float b){
 }
 
 int main(){
-    int a = 1;
+    int a = 3;
     float fa = 2.0;
-    f_add(i_add(a,3),fa);
+    f_add(i_add(a+a,a*a),fa);
     return 0;
 }
 '''

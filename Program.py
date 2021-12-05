@@ -13,11 +13,11 @@ class Field:
     def __init__(self, id, type_list:list, size):
         self.id = id
         self.size = size
-        self.type_list = type_list
+        self.type = type_list
         self.fieldType = "Field"
 
     def __repr__(self):
-        return "<"+self.fieldType+" id='" + self.id + "' type='" + str(self.type_list) + "'/>"
+        return "<"+self.fieldType+" id='" + self.id + "' type='" + str(self.type) + "'/>"
 
 
 class LocalField(Field):
@@ -36,12 +36,13 @@ class ParamField(LocalField):
 class StaticField(Field):
     def __init__(self, id, type_list:list, size):
         super().__init__(id, type_list, size)
-        self.fieldType='Param'
+        self.fieldType='Static'
 
 class ConstantField(Field):
-    def __init__(self, id, type_list:list, size):
+    def __init__(self, id, type_list:list,val, size):
         super().__init__(id, type_list, size)
         self.fieldType='Constant'
+        self.val = val
 
 
 class FuncField(Field):
@@ -54,9 +55,6 @@ class StorageUnit:
     field_table = {}
     static_list = {}
     constant_list = {}
-    sub_storageUnit = []
-    func_calling_space = 0
-    param_offset = 0
     def __repr__(self):
         sub = ""
         for su in self.sub_storageUnit:
@@ -105,36 +103,48 @@ class StorageUnit:
     def get(self, id: str) -> Field:
         field = None
         try:
-            try:
-                field = self.field_table[id]
-            except KeyError:
-                if self.caller is not None:
-                    field = self.caller.get(id)
+            field = self.field_table[id]
+        except KeyError:
+            if self.caller is not None:
+                field = self.caller.get(id)
+        try:
             if field is None:
                 field = self.constant_list[id]
         except KeyError:
-            if field is None:
-                print("Error: Undefined Identifier of " + str(id))
-                traceback.print_exc()
-                self.add_local(id,"int",8)
-                field = self.get(id)
+            try:
+                if field is None:
+                    field = self.static_list[id]
+            except KeyError:
+                if field is None:
+                    print("Error: Undefined Identifier of " + str(id))
+                    traceback.print_exc()
+                    self.add_local(id,["int"],8)
+                    field = self.get(id)
         return field
 
-    def add_constant(self, id: str, type_list: list, size: int):
+    def add_constant(self, id: str, type_list: list,const_val, size: int):
+        if self.caller is not None:
+            self.caller.add_constant(id, type_list, const_val,size)
+        else:
+            try:
+                if self.constant_list[id]:
+                    print("Redeclare of constant variable: {}".format(id))
+                return self.constant_list[id]
+            except KeyError:
+                field = ConstantField(id, type_list,const_val, size)
+                self.constant_list[id]=field
+                return field
+
+
+    def add_static(self, id: str, type_list, size: int):
         try:
-            return self.constant_list[id]
+            return self.static_list[id]
         except KeyError:
-            field = ConstantField(id, type_list, size)
-            self.constant_list[id]=field
+            field = StaticField(id, type_list, size)
+            self.static_list[id] = field
             if self.caller is not None:
-                self.caller.add_constant(id,type_list,size)
+                self.caller.add_static(id, type_list, size)
         return field
-
-
-    def add_static(self, id: str, type: str, size: int):
-        field = StaticField(id, type, size)
-        self.static_list[id]=field
-        #self.caller.add_static(id,type,size)
 
     def get_func_calling_space(self):
         space = self.func_calling_space

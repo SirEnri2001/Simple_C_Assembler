@@ -89,7 +89,6 @@ class BaseNode:
 
 class Node(BaseNode):
     optr = None
-    type = ""
     storage_unit: StorageUnit
 
     def __init__(self, optr, sub_node_list: list):
@@ -101,6 +100,7 @@ class Node(BaseNode):
         self.targetCode = []
         self.targetCode_post = []
         self.asm_val = ''
+        self.type = []
 
     def __repr__(self):
         return self.__str__()
@@ -187,8 +187,8 @@ class ProgramNode(Node):
             return self.targetCode
         self.targetCode.append(".section .data")
         for const_field_id,const_field in self.storage_unit.constant_list.items():
-            self.targetCode.append("LC"+str(lc_seq)+":")
-            self.targetCode.append("\t."+str(const_field.type_list[0])+" "+str(const_field_id))
+            self.targetCode.append(const_field_id+":")
+            self.targetCode.append("\t."+str(const_field.type[0])+" "+str(const_field.val))
         self.targetCode.append(".section .text")
         return self.targetCode
 
@@ -204,7 +204,7 @@ class ExtNode(Node):
         if self.optr == 'extdec':
             self.type_leaf = self.child_node_list[0]
             self.id_leaf = self.child_node_list[1]
-            self.storage_unit.add_static(self.id_leaf.val, self.type_leaf.val, self.type_leaf.size)
+            self.storage_unit.add_static(self.id_leaf.val, self.type_leaf.type, self.type_leaf.size)
         if self.optr == 'extdef_func':
             new_su = StorageUnit(self.storage_unit)
             self.storage_unit = new_su
@@ -212,6 +212,9 @@ class ExtNode(Node):
     def set_program_post(self):
         if self.optr == 'extdef_func':
             self.storage_unit.add_size(self.storage_unit.get_func_calling_space())
+            self.storage_unit.add_static(self.child_node_list[0].val,
+                                         self.child_node_list[0].ret_type_node.type,
+                                         self.child_node_list[0].ret_type_node.size)
 
     def get_fakeCode(self) -> list:
         if self.optr == 'extdec':
@@ -248,6 +251,20 @@ class CalcNode(Node):
         t_seq = t_seq + 1
         self.asm_val = '%eax'
 
+    def set_program_post(self):
+        if self.child_node_list[0].type[0] in int_type_list and self.child_node_list[1].type[0] in int_type_list:
+            self.type = self.child_node_list[0].type.copy()
+        if not self.child_node_list[0].type or not self.child_node_list[1].type:
+            print("CalcNode Error")
+            raise ValueError("Calc Error")
+        if self.child_node_list[0].type not in int_type_list:
+            self.type = self.child_node_list[0].type
+        else:
+            self.type = self.child_node_list[1].type
+        if not self.type:
+            print("Compiler Error: Type Not Specified")
+            raise ValueError("Type not Specified")
+
     def get_targetCode(self) -> list:
         if self.child_node_list[0].optr == '*':
             self.child_node_list[0].asm_val = '%edx'
@@ -256,20 +273,10 @@ class CalcNode(Node):
         return self.targetCode
 
     def get_targetCode_post(self) -> list:
-        if self.child_node_list[0].type[0] in int_type_list and self.child_node_list[1].type[0] in int_type_list:
-            self.type = self.child_node_list[0].type.copy()
+        if self.type[0] in int_type_list:
             return self.get_targetCode_post_int()
-        if not self.child_node_list[0].type or not self.child_node_list[1].type:
-            print("CalcNode Error")
-            raise ValueError("Calc Error")
-        if self.child_node_list[0].type not in int_type_list:
-            self.type = self.child_node_list[0].type
-        else:
-            self.type = self.child_node_list[1].type
-        if self.type is None or self.type == '':
-            print("Compiler Error: Type Not Specified")
-            raise ValueError("Type not Specified")
-        return self.get_targetCode_post_float()
+        elif self.type[0] in float_type_list:
+            return self.get_targetCode_post_float()
 
     @classmethod
     def load_float(cls,node) -> str:
@@ -349,7 +356,7 @@ class CalcNode(Node):
                     if self.optr in ['%']:
                         temp_res = '%edx'
                 if temp_res != self.asm_val:
-                    post.append("mov{} {},{}".format(instr_suffix[self.child_node_list[0].type],
+                    post.append("mov{} {},{}".format(instr_suffix[self.child_node_list[0].type[0]],
                                                      temp_res, self.asm_val))
         except KeyError as e:
             print("Compiler Error: Key Error in Calc: {}".format(str(self)))
@@ -428,7 +435,7 @@ class FunDefNode(Node):
         self.ret_type_node = self.child_node_list[0]
         self.id_node = self.child_node_list[1]
         self.val = self.id_node.val
-        self.storage_unit.add_constant(self.id_node.val, self.ret_type_node.type_list, 4)
+        self.storage_unit.add_static(self.id_node.val, self.ret_type_node.type, 4)
 
     def get_fakeCode(self):
         self.fakeCode.append("{}:".format(self.child_node_list[1].child_node_list[0].val))
@@ -470,10 +477,10 @@ class LocalDecNode(Node):
         self.id_node = self.child_node_list[1]
         self.id_node.type = self.child_node_list[0]
         if self.optr == 'param_dec':
-            self.storage_unit.add_param(self.id_node.val, self.type_node.type_list,
+            self.storage_unit.add_param(self.id_node.val, self.type_node.type,
                                         self.type_node.size)
         else:
-            self.storage_unit.add_local(self.id_node.val, self.type_node.type_list,
+            self.storage_unit.add_local(self.id_node.val, self.type_node.type,
                                         self.type_node.size)
         if len(self.child_node_list) == 3:
             self.child_node_list[2].child_node_list.pop(0)
@@ -517,10 +524,11 @@ class StmtNode(Node):
     def get_targetCode_post_linux(self) -> list:
         post = []
         if self.optr == 'return':
-            if self.child_node_list[0].type[0] in float_type_list and self.child_node_list[0].asm_val != '#':
-                CalcNode.load_float(self.child_node_list[0])
-            if self.child_node_list[0] is not None and self.child_node_list[0].asm_val != '%eax':
-                post.append('movl {},%eax'.format(self.child_node_list[0].asm_val))
+            if self.child_node_list[0] is not None:
+                if self.child_node_list[0].type[0] in float_type_list and self.child_node_list[0].asm_val != '#':
+                    CalcNode.load_float(self.child_node_list[0])
+                if self.child_node_list[0].type[0] in int_type_list and self.child_node_list[0].asm_val != '%eax':
+                    post.append('movl {},%eax'.format(self.child_node_list[0].asm_val))
             post.append('leave')
             post.append('ret')
         if self.optr == 'print':
@@ -536,8 +544,11 @@ class StmtNode(Node):
     def get_targetCode_post(self) -> list:
         post = []
         if self.optr == 'return':
-            if self.child_node_list[0] is not None and self.child_node_list[0].asm_val != '%eax':
-                post.append('movl {},%eax'.format(self.child_node_list[0].asm_val))
+            if self.child_node_list[0] is not None:
+                if self.child_node_list[0].type[0] in float_type_list and self.child_node_list[0].asm_val != '#':
+                    CalcNode.load_float(self.child_node_list[0])
+                if self.child_node_list[0].type[0] in int_type_list and self.child_node_list[0].asm_val != '%eax':
+                    post.append('movl {},%eax'.format(self.child_node_list[0].asm_val))
             post.append('leave')
             post.append('ret')
         if self.optr == 'print':
@@ -556,28 +567,37 @@ class FuncCallNode(CalcNode):
 
     def set_program(self):
         self.val = self.child_node_list[0].val
-        self.type = self.storage_unit.get(self.val).type_list
+        self.type = self.storage_unit.get(self.val).type
+        self.size = size_table[self.type[0]]
+        if self.type[0] in int_type_list:
+            self.asm_val = '%eax'
+        elif self.type[0] in float_type_list:
+            self.asm_val = '#'
 
     def set_program_post(self):
         space = 0
+        for arg in self.child_node_list[1:]:
+            space = space + size_table[arg.type[0]]
         self.storage_unit.func_calling_space = max(self.storage_unit.func_calling_space, space)
 
-
-    def get_targetCode_post(self) -> list:
-        post = []
+    def get_targetCode(self) -> list:
         offset = 0
-        self.type = self.child_node_list[0].type  # Simple implicit type convert
-        for arg in self.child_node_list[1].child_node_list:
-            field = arg.field
-            if offset == 0:
-                post.append("mov{} {},{}".format(instr_suffix[field.type_list[0]], arg.asm_val, "(%esp)"))
+        des = "(%esp)"
+        for arg in self.child_node_list[1:]:
+            if type(arg) == CalcNode:
+                arg.asm_val = des
             else:
-                post.append("mov{} {},{}".format(instr_suffix[field.type], arg.asm_val, str(offset) + "(%esp)"))
-            offset = field.size
-        post.append("{} _{}".format("call", self.child_node_list[0].val))
-        post.extend(self.targetCode_post)
-        self.targetCode_post = post
-        return self.targetCode_post
+                if arg.type[0] in int_type_list:
+                    if arg.asm_val != '%eax':
+                        self.targetCode_post.append("mov{} {},%eax".format(instr_suffix[arg.type[0]], arg.asm_val))
+                    self.targetCode_post.append("mov{} %eax,{}".format(instr_suffix[arg.type[0]], des))
+                elif arg.type[0] in float_type_list:
+                    self.targetCode_post.append(self.load_float(arg))
+                    self.targetCode_post.append('fstps {}'.format(des))
+            offset = size_table[arg.type[0]] + offset
+            des = str(offset) + "(%esp)"
+        self.targetCode_post.append("{} _{}".format("call", self.child_node_list[0].val))
+        return self.targetCode
 
     def get_fakeCode_post(self) -> list:
         post = []
@@ -678,6 +698,7 @@ class NoneLeaf(Leaf):
 
     def __init__(self):
         super().__init__('none', None)
+        self.type = []
 
     @classmethod
     def getInstance(cls):
@@ -698,16 +719,15 @@ class LiteralLeaf(Leaf):
         self.type_str = TypeLeaf.get_str(type_list)
         if type_list[0] in size_table.keys():
             self.size = size_table[type_list[0]]
-        #elif type_list == ['*','char']:
-        #    self.size = len(val)-1 - val.count('\\')
 
     def set_program(self):
-        if self.nodeType == 'NUM':
-            self.asm_val = '$' + str(self.val)
-        elif self.type_str=='const char *':
-            self.storage_unit.add_constant(self.val, ['asciz'], self.size)
+        global lc_seq
+        self.asm_val = 'LC{}'.format(str(lc_seq))
+        lc_seq = lc_seq+1
+        if self.type_str=='char *':
+            self.storage_unit.add_constant(self.asm_val, ['asciz'],self.val, self.size)
         else:
-            self.storage_unit.add_constant(self.val,self.type,self.size)
+            self.storage_unit.add_constant(self.asm_val,self.type,self.val,self.size)
 
 
 
@@ -719,6 +739,7 @@ class ValLeaf(Leaf):
         if self.type[0] in int_type_list:
             self.asm_val = '$' + str(self.val)
             self.asm_val = '$' + str(self.val)
+            self.size = size_table[self.type[0]]
 
 class IdLeaf(Leaf):
     def __init__(self, val):
@@ -728,9 +749,10 @@ class IdLeaf(Leaf):
 
     def set_program(self):
         self.field = self.storage_unit.get(self.name)
-        self.type = self.field.type_list
+        self.type = self.field.type
+        self.size = self.field.size
 
-    def get_targetCode(self) -> list:
+    def set_program_post(self):
         global stack_trace_length
         if type(self.field) == LocalField:
             self.asm_val = str(-self.field.offset - self.field.size) + "(%ebp)"
@@ -740,27 +762,26 @@ class IdLeaf(Leaf):
             self.asm_val = self.field.id
         else:
             self.asm_val = "unknown symbol: {}".format(self)
-        return self.targetCode
 
 
 class TypeLeaf(Leaf):
     size: int
 
     def __str__(self):
-        return "<" + str(self.nodeType) + " list='" + str(self.type_list) + "'/>"
+        return "<" + str(self.nodeType) + " list='" + str(self.type) + "'/>"
 
     @classmethod
-    def get_str(cls,type_list:list) -> str:
+    def get_str(cls,type:list) -> str:
         val = ''
         i = 0
-        while i < len(type_list):
-            _type = type_list[i]
+        while i < len(type):
+            _type = type[i]
             if _type == '*':
                 val = '*' + val
             elif re.match(r'\[\d*]', _type):
                 if re.match(r'\(.*?\)', _type):
                     print("Type Error: no such type {}".format(val + _type))
-                elif i > 0 and type_list[i - 1] == '*':
+                elif i > 0 and type[i - 1] == '*':
                     val = "(" + val + ")" + _type
                 else:
                     val = val + _type
@@ -783,11 +804,11 @@ class TypeLeaf(Leaf):
         else:
             self.size = size_table[val]
         if subtype.nodeType!='none':
-            self.type_list = subtype.type_list.copy()
-            self.type_list.append(val)
+            self.type = subtype.type.copy()
+            self.type.append(val)
         else:
-            self.type_list = [val]
-        self.val = TypeLeaf.get_str(self.type_list)
+            self.type = [val]
+        self.val = TypeLeaf.get_str(self.type)
 
     def set_program(self):
         pass
@@ -797,7 +818,7 @@ class TypeLeaf(Leaf):
         global declared_type
         str_list = []
         if subtype.nodeType!='none':
-            str_list = subtype.type_list.copy()
+            str_list = subtype.type.copy()
         str_list.append(val)
         str = TypeLeaf.get_str(str_list)
         try:
@@ -809,7 +830,7 @@ class TypeLeaf(Leaf):
 
     @classmethod
     def getTypeList(cls,val,subtype = NoneLeaf.getInstance()):
-        return TypeLeaf.getType(val,subtype).type_list
+        return TypeLeaf.getType(val,subtype).type
 
 
 class TreeOptimizer:
