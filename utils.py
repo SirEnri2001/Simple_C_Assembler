@@ -279,19 +279,20 @@ class CalcNode(Node):
             return self.get_targetCode_post_float()
 
     @classmethod
-    def load_float(cls,node) -> str:
-        if node.type in int_type_list:
-            return 'fild{} {}'.format(instr_suffix[node.type],
-                                           node.asm_val)
+    def load_float(cls,node:Node) -> list:
+        #TODO: 浮点舍入操作
+        if node.type[0] in int_type_list:
+            node.storage_unit.type_convert_space = max(node.storage_unit.type_convert_space,size_table[node.type[0]])
+            return ['fldz','fiadd {}'.format(node.asm_val)]
         elif node.asm_val != '#':
-            return 'flds {}'.format(node.asm_val)
+            return ['flds {}'.format(node.asm_val)]
 
     def get_targetCode_post_float(self) -> list:
         post = []
         self.asm_val = '#'
         try:
             if self.optr == '=':
-                post.append(self.load_float(self.child_node_list[1]))
+                post.extend(self.load_float(self.child_node_list[1]))
                 if self.child_node_list[0].type in int_type_list:
                     post.append('fist {}'.format(self.child_node_list[0].asm_val))
                 else:
@@ -300,18 +301,18 @@ class CalcNode(Node):
             else:
                 if self.optr in ['+', '-', '*','/', '>', '<', '>=', '<=', '==']:
                     if self.optr in ['+', '-', '*']:
-                        post.append(self.load_float(self.child_node_list[1]))
+                        post.extend(self.load_float(self.child_node_list[1]))
                         if self.optr == '-':
                             post.append("fchs")
-                        post.append(self.load_float(self.child_node_list[0]))
+                        post.extend(self.load_float(self.child_node_list[0]))
                         if self.child_node_list[0].asm_val=='#':
                             post.append("{} %st(1),%st(0)".format(float_instruction_table[self.optr]))
                         else:
                             post.append("{} %st(0),%st(1)".format(float_instruction_table[self.optr]))
                     else:
                         self.asm_val = '%eax'
-                        post.append(self.load_float(self.child_node_list[1]))
-                        post.append(self.load_float(self.child_node_list[0]))
+                        post.extend(self.load_float(self.child_node_list[1]))
+                        post.extend(self.load_float(self.child_node_list[0]))
                         post.append("fcomip %st(0),%st(1)")
                         post.append("set{} %al".format(relop_table[self.optr]))
                         if self.asm_val !='%eax':
@@ -430,12 +431,14 @@ class FunDefNode(Node):
         self.ret_type_node = ret_type_node
         self.id_node = fundec
         self.val = fundec.val
+        self.params = []
 
     def set_program(self):
         self.ret_type_node = self.child_node_list[0]
         self.id_node = self.child_node_list[1]
         self.val = self.id_node.val
-        self.storage_unit.add_static(self.id_node.val, self.ret_type_node.type, 4)
+        self.params = self.child_node_list[2:]
+        self.storage_unit.add_func(self.id_node.val, self.ret_type_node.type, self.params)
 
     def get_fakeCode(self):
         self.fakeCode.append("{}:".format(self.child_node_list[1].child_node_list[0].val))
@@ -446,7 +449,7 @@ class FunDefNode(Node):
         post.append("_{}:".format(self.val))
         post.append("pushl %ebp")
         post.append("movl %esp,%ebp")
-        alloc = self.storage_unit.func_calling_space + self.storage_unit.size
+        alloc = self.storage_unit.get_total_space()
         if alloc != 0:
             post.append("subl ${},%esp".format(alloc))
         post.extend(self.targetCode_post)
@@ -474,6 +477,7 @@ class LocalDecNode(Node):
             self.child_node_list.pop(1)
             self.child_node_list.pop(1)
         self.type_node = self.child_node_list[0]
+        self.type = self.type_node.type
         self.id_node = self.child_node_list[1]
         self.id_node.type = self.child_node_list[0]
         if self.optr == 'param_dec':
@@ -567,8 +571,10 @@ class FuncCallNode(CalcNode):
 
     def set_program(self):
         self.val = self.child_node_list[0].val
-        self.type = self.storage_unit.get(self.val).type
+        self.func = self.storage_unit.getFunc(self.val)
+        self.type = self.func.type
         self.size = size_table[self.type[0]]
+        self.params = self.func.param_list
         if self.type[0] in int_type_list:
             self.asm_val = '%eax'
         elif self.type[0] in float_type_list:
@@ -579,23 +585,37 @@ class FuncCallNode(CalcNode):
         for arg in self.child_node_list[1:]:
             space = space + size_table[arg.type[0]]
         self.storage_unit.func_calling_space = max(self.storage_unit.func_calling_space, space)
+        i=0
+        while i < len(self.child_node_list)-1:
+            arg = self.child_node_list[i+1]
+            param = self.params[i]
+            if param.type[0] in float_type_list:
+                # TODO: Implicit convert and Explicit convert need some mem area, and it should be calculed here
+            offset = size_table[arg.type[0]] + offset
+            des = str(offset) + "(%esp)"
+            i = i+1
+        self.storage_unit.type_convert_space = max(self.storage_unit.type_convert_space,size_table[])
 
     def get_targetCode(self) -> list:
         offset = 0
         des = "(%esp)"
-        for arg in self.child_node_list[1:]:
+        i = 0
+        while i < len(self.child_node_list)-1:
+            arg = self.child_node_list[i+1]
+            param = self.params[i]
             if type(arg) == CalcNode:
                 arg.asm_val = des
             else:
-                if arg.type[0] in int_type_list:
+                if param.type[0] in int_type_list:
                     if arg.asm_val != '%eax':
                         self.targetCode_post.append("mov{} {},%eax".format(instr_suffix[arg.type[0]], arg.asm_val))
                     self.targetCode_post.append("mov{} %eax,{}".format(instr_suffix[arg.type[0]], des))
-                elif arg.type[0] in float_type_list:
-                    self.targetCode_post.append(self.load_float(arg))
+                elif param.type[0] in float_type_list:
+                    self.targetCode_post.extend(self.load_float(arg))
                     self.targetCode_post.append('fstps {}'.format(des))
             offset = size_table[arg.type[0]] + offset
             des = str(offset) + "(%esp)"
+            i = i+1
         self.targetCode_post.append("{} _{}".format("call", self.child_node_list[0].val))
         return self.targetCode
 

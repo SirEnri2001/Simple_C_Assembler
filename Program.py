@@ -46,15 +46,17 @@ class ConstantField(Field):
 
 
 class FuncField(Field):
-    def __init__(self, id, type_list:list):
-        super().__init__(id, type_list, 0)
+    def __init__(self, id, type_list:list,param_list):
+        super().__init__(id, type_list, 4)
         self.fieldType='Func'
+        self.param_list = param_list
 
 
 class StorageUnit:
     field_table = {}
     static_list = {}
     constant_list = {}
+    func_list = {}
     def __repr__(self):
         sub = ""
         for su in self.sub_storageUnit:
@@ -68,6 +70,7 @@ class StorageUnit:
         self.field_table = {}
         self.size = 0
         self.func_calling_space = 0
+        self.type_convert_space = 0
         self.sub_storageUnit = []
         self.param_offset = 0
         if caller is not None:
@@ -75,6 +78,9 @@ class StorageUnit:
             self.constant_list = caller.constant_list
             caller.sub_storageUnit.append(self)
         su_id = su_id + 1
+
+    def get_total_space(self):
+        return self.size+ self.type_convert_space+self.func_calling_space
 
     def add_field(self, field: Field):
         try:
@@ -99,6 +105,30 @@ class StorageUnit:
         field = ParamField(id, type, size, self.param_offset)
         self.param_offset = self.param_offset + size
         self.add_field(field)
+
+    def add_func(self, id, type_list, params_node_list: list):
+        if self.caller is not None:
+            self.caller.add_func(id, type_list, params_node_list)
+        else:
+            try:
+                if self.func_list[id]:
+                    print("Redeclare of constant variable: {}".format(id))
+                return self.func_list[id]
+            except KeyError:
+                field = FuncField(id, type_list, params_node_list)
+                self.func_list[id] = field
+                return field
+
+    def getFunc(self, id: str) -> FuncField:
+        field = None
+        try:
+            field = self.func_list[id]
+        except KeyError:
+                print("Error: Undefined Function of " + str(id))
+                traceback.print_exc()
+                self.add_func(id,["int"],[])
+                field = self.get(id)
+        return field
 
     def get(self, id: str) -> Field:
         field = None
