@@ -1,14 +1,14 @@
 <Program optr='ExtDefList'>
     <Ext optr='extdef_func'>
         <FunDef optr='funhead_def'>
-            <Type list='[' int']'/>
+            <Type list="['int']'"/>
             <ID val='i_add'/>
             <LocalDec optr='param_dec'>
-                <Type list='[' int']'/>
+                <Type list="['int']'"/>
                 <ID val='a'/>
             </LocalDec>
             <LocalDec optr='param_dec'>
-                <Type list='[' int']'/>
+                <Type list="['int']'"/>
                 <ID val='b'/>
             </LocalDec>
         </FunDef>
@@ -23,14 +23,14 @@
     </Ext>
     <Ext optr='extdef_func'>
         <FunDef optr='funhead_def'>
-            <Type list='[' float']'/>
+            <Type list="['float']'"/>
             <ID val='f_add'/>
             <LocalDec optr='param_dec'>
-                <Type list='[' float']'/>
+                <Type list="['float']'"/>
                 <ID val='a'/>
             </LocalDec>
             <LocalDec optr='param_dec'>
-                <Type list='[' float']'/>
+                <Type list="['float']'"/>
                 <ID val='b'/>
             </LocalDec>
         </FunDef>
@@ -45,12 +45,12 @@
     </Ext>
     <Ext optr='extdef_func'>
         <FunDef optr='funhead_def'>
-            <Type list='[' int']'/>
+            <Type list="['int']'"/>
             <ID val='main'/>
         </FunDef>
         <CompStmt optr='compst'>
             <LocalDec optr='dec'>
-                <Type list='[' int']'/>
+                <Type list="['int']'"/>
                 <ID val='a'/>
                 <Calc optr='='>
                     <ID val='a'/>
@@ -58,7 +58,7 @@
                 </Calc>
             </LocalDec>
             <LocalDec optr='dec'>
-                <Type list='[' float']'/>
+                <Type list="['float']'"/>
                 <ID val='fa'/>
                 <Calc optr='='>
                     <ID val='fa'/>

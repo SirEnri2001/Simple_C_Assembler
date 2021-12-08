@@ -80,7 +80,7 @@ class StorageUnit:
         su_id = su_id + 1
 
     def get_total_space(self):
-        return self.size+ self.type_convert_space+self.func_calling_space
+        return self.size+ self.get_type_convert_space()+self.get_func_calling_space()
 
     def add_field(self, field: Field):
         try:
@@ -180,4 +180,10 @@ class StorageUnit:
         space = self.func_calling_space
         for su in self.sub_storageUnit:
             space = max(space,su.func_calling_space)
+        return space
+
+    def get_type_convert_space(self):
+        space = self.type_convert_space
+        for su in self.sub_storageUnit:
+            space = max(space,su.type_convert_space)
         return space

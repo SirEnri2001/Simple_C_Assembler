@@ -388,6 +388,7 @@ s = '''
  * Author : hanxinghua
  *
  */
+/* 输入程序 */
 int i_add(int a,int b){
     return a+b;
 }
@@ -411,7 +412,7 @@ optimizer.PromotionNodes(node)
 optimizer.PromotionNodesSpecified(node, ["extdec", "extdec_fun"])
 optimizer.PromotionNodesSpecified(node, ["dec"])
 
-print(node)
+#print(node)
 node.start_program(storage_unit)
 for code in node.generate_targetCode():
     if re.match(".*[.:].*",code):
